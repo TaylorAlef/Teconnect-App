@@ -1,7 +1,7 @@
 /* Te-connect master brand for the SaaS suite */
 .suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{
-  width:188px!important;
-  height:44px!important;
+  width:228px!important;
+  height:54px!important;
   display:block!important;
   flex:0 0 auto!important;
   overflow:hidden!important;
@@ -11,4 +11,4 @@
   border:0!important;
   box-shadow:none!important;
 }
-@media(max-width:720px){.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{width:164px!important;height:40px!important}}
+@media(max-width:720px){.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{width:196px!important;height:48px!important}}
