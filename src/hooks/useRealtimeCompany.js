@@ -21,30 +21,58 @@ const TABLES = [
   'picagens',
 ];
 
+function publishStatus(status) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent('teconnect:realtime-status', { detail: { status } }));
+}
+
 export function useRealtimeCompany(supabase, companyId, onChange) {
   const callbackRef = useRef(onChange);
+  const refreshTimerRef = useRef(null);
   const [status, setStatus] = useState('DISCONNECTED');
 
   useEffect(() => { callbackRef.current = onChange; }, [onChange]);
 
   useEffect(() => {
-    if (!companyId) return undefined;
+    if (!companyId) {
+      publishStatus('DISCONNECTED');
+      return undefined;
+    }
 
     const channel = supabase.channel(`teconnect-company-${companyId}`);
+    const emit = (table, payload) => callbackRef.current?.({ table, payload });
 
     TABLES.forEach((table) => {
       channel.on(
         'postgres_changes',
         { event: '*', schema: 'public', table, filter: `company_id=eq.${companyId}` },
-        (payload) => callbackRef.current?.({ table, payload }),
+        (payload) => emit(table, payload),
       );
     });
 
-    channel.subscribe((nextStatus) => setStatus(nextStatus));
-    return () => { supabase.removeChannel(channel); setStatus('DISCONNECTED'); };
+    channel.subscribe((nextStatus) => {
+      setStatus(nextStatus);
+      publishStatus(nextStatus);
+    });
+
+    return () => {
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+      supabase.removeChannel(channel);
+      setStatus('DISCONNECTED');
+      publishStatus('DISCONNECTED');
+    };
   }, [supabase, companyId]);
 
-  return { status };
+  const scheduleRefresh = (refresh) => {
+    if (!refresh) return;
+    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshTimerRef.current = null;
+      refresh();
+    }, 350);
+  };
+
+  return { status, scheduleRefresh, realtimeTables: TABLES };
 }
 
 export const realtimeTables = TABLES;
