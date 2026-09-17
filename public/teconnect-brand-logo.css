@@ -1,5 +1,5 @@
 /* Te-connect master brand — single vector source */
-.tc-brand{gap:0!important;align-items:center!important;justify-content:flex-start;min-height:48px}
+.tc-brand{gap:0!important;align-items:center!important;justify-content:flex-start;min-height:58px}
 .tc-brand>div:not(.tc-brand-mark){display:none!important}
-.tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:188px!important;height:44px!important;border-radius:0!important;display:block!important;flex:0 0 auto!important;background:transparent url('/teconnect-logo.svg') center/contain no-repeat!important;border:0!important;box-shadow:none!important;font-size:0!important;color:transparent!important}
-@media(max-width:720px){.tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:164px!important;height:40px!important}}
+.tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:228px!important;height:54px!important;border-radius:0!important;display:block!important;flex:0 0 auto!important;background:transparent url('/teconnect-logo.svg') center/contain no-repeat!important;border:0!important;box-shadow:none!important;font-size:0!important;color:transparent!important}
+@media(max-width:720px){.tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:196px!important;height:48px!important}}
