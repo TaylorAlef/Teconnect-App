@@ -1,0 +1,15 @@
+{
+  "name": "Te-connect — People OS",
+  "short_name": "Te-connect",
+  "description": "Plataforma empresarial para gestão de pessoas, assiduidade e operações de RH.",
+  "lang": "pt-PT",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "theme_color": "#07101f",
+  "background_color": "#07101f",
+  "icons": [
+    { "src": "/teconnect-logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
