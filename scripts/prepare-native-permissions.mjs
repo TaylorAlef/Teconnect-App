@@ -20,6 +20,7 @@ function patchIosPlist() {
   for (const [key, value] of Object.entries(required)) {
     if (xml.includes(`<key>${key}</key>`)) continue;
     const entry = `\n\t<key>${key}</key>\n\t<string>${value}</string>`;
+    if (!xml.includes('\n</dict>')) throw new Error('iOS Info.plist structure is not compatible with permission patching.');
     xml = xml.replace(/\n<\/dict>/, `${entry}\n</dict>`);
   }
 
@@ -27,30 +28,37 @@ function patchIosPlist() {
   console.log('iOS location permission descriptions prepared.');
 }
 
-function verifyAndroidManifest() {
+function patchAndroidManifest() {
   const manifestPath = path.join(root, 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
   if (!fs.existsSync(manifestPath)) {
     throw new Error(`AndroidManifest.xml not found: ${manifestPath}`);
   }
 
-  const xml = fs.readFileSync(manifestPath, 'utf8');
+  let xml = fs.readFileSync(manifestPath, 'utf8');
   const requiredPermissions = [
     'android.permission.ACCESS_COARSE_LOCATION',
     'android.permission.ACCESS_FINE_LOCATION',
   ];
-  const missing = requiredPermissions.filter((permission) => !xml.includes(permission));
-  if (missing.length) {
-    throw new Error(`Android location permissions missing: ${missing.join(', ')}`);
+
+  for (const permission of requiredPermissions) {
+    if (xml.includes(`android:name=\"${permission}\"`)) continue;
+    const entry = `    <uses-permission android:name=\"${permission}\" />\n`;
+    const marker = '    <application';
+    if (!xml.includes(marker)) throw new Error('AndroidManifest.xml structure is not compatible with permission patching.');
+    xml = xml.replace(marker, `${entry}${marker}`);
   }
 
-  console.log('Android location permissions verified.');
+  fs.writeFileSync(manifestPath, xml);
+  const missing = requiredPermissions.filter((permission) => !xml.includes(`android:name=\"${permission}\"`));
+  if (missing.length) throw new Error(`Android location permissions missing after patch: ${missing.join(', ')}`);
+  console.log('Android location permissions prepared.');
 }
 
 const platform = process.argv[2];
 if (platform === 'ios') {
   patchIosPlist();
 } else if (platform === 'android') {
-  verifyAndroidManifest();
+  patchAndroidManifest();
 } else {
   throw new Error('Usage: node scripts/prepare-native-permissions.mjs <ios|android>');
 }
