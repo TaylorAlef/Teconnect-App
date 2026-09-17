@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { applyDocumentLocale, resolveGlobalPreferences, savePreferences, SUPPORTED_LOCALES } from './globalization.js';
+import { applyDocumentLocale, resolveGlobalPreferences, SUPPORTED_LOCALES } from './globalization.js';
 import { translate } from './messages.js';
 
 const supabase = createClient(
@@ -9,7 +9,15 @@ const supabase = createClient(
   { auth: { persistSession: true, autoRefreshToken: true } },
 );
 
-const EMPTY = { countryCode: null, locale: null, currency: null, timeZone: null, weekStartDay: 1 };
+const EMPTY = { countryCode: 'PT', locale: 'pt-PT', currency: 'EUR', timeZone: 'Europe/Lisbon', weekStartDay: 1 };
+
+function assertValidTimeZone(timeZone) {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone }).format();
+  } catch {
+    throw new Error('Invalid IANA timezone.');
+  }
+}
 
 export function useCompanyLocalization(companyId) {
   const [companySettings, setCompanySettings] = useState(EMPTY);
@@ -36,12 +44,6 @@ export function useCompanyLocalization(companyId) {
           timeZone: data.timezone,
           weekStartDay: data.week_start_day || 1,
         });
-        savePreferences({
-          countryCode: data.country_code,
-          locale: data.locale_code,
-          currency: data.currency_code,
-          timeZone: data.timezone,
-        });
       }
     } finally {
       setLoading(false);
@@ -50,10 +52,13 @@ export function useCompanyLocalization(companyId) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const preferences = useMemo(() => resolveGlobalPreferences(companySettings), [companySettings]);
+  const preferences = useMemo(
+    () => resolveGlobalPreferences(companySettings, { useStored: false }),
+    [companySettings],
+  );
 
   useEffect(() => {
-    applyDocumentLocale(preferences);
+    applyDocumentLocale(preferences, { useStored: false });
   }, [preferences]);
 
   const t = useCallback((key, fallback) => translate(preferences.locale, key, fallback), [preferences.locale]);
@@ -67,6 +72,8 @@ export function useCompanyLocalization(companyId) {
       timeZone: patch.timeZone ?? companySettings.timeZone,
       weekStartDay: patch.weekStartDay ?? companySettings.weekStartDay ?? 1,
     };
+    assertValidTimeZone(normalized.timeZone);
+
     const payload = {
       country_code: normalized.countryCode,
       locale_code: normalized.locale,
@@ -83,13 +90,7 @@ export function useCompanyLocalization(companyId) {
     if (error) throw error;
 
     setCompanySettings(normalized);
-    savePreferences({
-      countryCode: normalized.countryCode,
-      locale: normalized.locale,
-      currency: normalized.currency,
-      timeZone: normalized.timeZone,
-    });
-    applyDocumentLocale(normalized);
+    applyDocumentLocale(normalized, { useStored: false });
     return normalized;
   }, [companyId, companySettings]);
 
