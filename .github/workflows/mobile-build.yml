@@ -1,0 +1,77 @@
+name: Te-connect Mobile Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'index.html'
+      - 'package.json'
+      - 'capacitor.config.ts'
+      - '.github/workflows/mobile-build.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build web bundle
+        run: npm run build
+      - name: Generate Android project
+        run: npx cap add android
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+      - name: Build Android debug APK
+        run: ./android/gradlew assembleDebug --no-daemon
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: teconnect-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build web bundle
+        run: npm run build
+      - name: Generate iOS project
+        run: npx cap add ios
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      - name: Build iOS simulator target
+        run: >-
+          xcodebuild
+          -workspace ios/App/App.xcworkspace
+          -scheme App
+          -sdk iphonesimulator
+          -configuration Debug
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
