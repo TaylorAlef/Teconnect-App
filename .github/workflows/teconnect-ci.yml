@@ -21,3 +21,5 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Production build
         run: npm run build
+      - name: Branding guard
+        run: npm run check:branding
