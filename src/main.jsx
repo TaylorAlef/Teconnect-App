@@ -173,7 +173,7 @@ function CommercialBridge() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}><button type="button" className="tc-btn" onClick={() => setPanel(null)}>Fechar</button></div>
-            {panel === 'billing' && canManageHr ? <BillingPage /> : <SuperAdminPage />}
+            {panel === 'billing' && canManageHr ? <BillingPage /> : panel === 'super-admin' && profile.role === 'SUPER_ADMIN' ? <SuperAdminPage /> : null}
           </div>
         </div>
       )}
