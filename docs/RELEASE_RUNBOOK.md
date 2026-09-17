@@ -1,78 +1,73 @@
 # Te-connect — Release Runbook
 
-## Objetivo
+## Scope
 
-Levar o Te-connect do estado técnico atual para lançamento comercial em Web, Android e iOS sem misturar testes com produção.
+This runbook is the release contract for the commercial launch planned for 23 September 2026.
 
-## Gate 1 — Código
+## 1. Code gate
 
-- [x] Build de produção no CI.
-- [x] Branding guard.
-- [x] Mobile readiness guard.
-- [x] Configuração Capacitor versionada.
-- [ ] Gerar e versionar os projetos nativos `android/` e `ios/` em máquina com Android Studio/Xcode.
+- `npm run build` must pass.
+- `npm run check:branding` must pass.
+- `npm run check:globalization` must pass.
+- `npm run mobile:check` must pass.
+- No unfinished demo-only path may be the production default.
 
-## Gate 2 — Backend e segurança
+## 2. Backend/security gate
 
-- [x] RLS no conjunto de tabelas públicas.
-- [x] Isolamento multi-tenant validado no ambiente E2E.
-- [x] Matriz de autorização sintética 69/69.
-- [ ] Executar matriz com utilizadores reais do Supabase Auth no ambiente E2E.
-- [ ] Ativar Leaked Password Protection no Supabase Auth.
-- [ ] Definir e impor MFA para administradores.
-- [ ] Fazer revisão final dos RPCs SECURITY DEFINER intencionais.
-- [ ] Upgrade do projeto Supabase de produção para Pro antes dos clientes pagantes.
+- Production migration set is current.
+- RLS enabled and tenant isolation verified.
+- No anonymous execution of privileged RPCs.
+- Review the Supabase security advisor warnings for every SECURITY DEFINER function exposed to `authenticated`.
+- Enable leaked password protection.
+- Define and enforce administrator MFA.
+- Confirm backups/PITR and retention suitable for paid production.
+- Confirm production organization/project is on the required paid plan before accepting customers.
 
-## Gate 3 — Produção Web
+## 3. Globalization gate
 
-- [ ] Confirmar variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_PUBLISHABLE_KEY` no ambiente Cloudflare.
-- [ ] Executar deploy de `main` no Cloudflare.
-- [ ] Smoke test em `https://app.te-connect.com/`.
-- [ ] Testar login, logout, onboarding e recuperação de acesso.
-- [ ] Testar Ponto com GPS em dispositivo real.
-- [ ] Testar pedidos e aprovações.
-- [ ] Testar faturamento em modo controlado antes do primeiro cliente pagante.
+- Company settings include country, locale, currency and week-start configuration.
+- Localization UI is available to authorized company administrators.
+- Dates/times use company timezone at the UI boundary.
+- Monetary values use company currency and locale.
+- No country-specific employment law is hard-coded into the shared UI core.
 
-## Gate 4 — Android
+## 4. Web production gate
 
-- [ ] Executar `npm install`.
-- [ ] Executar `npm run build`.
-- [ ] Executar `npx cap add android`.
-- [ ] Executar `npm run mobile:sync`.
-- [ ] Configurar assinatura de release e package id `com.teconnect.app`.
-- [ ] Configurar ícone, splash e nome Te-connect.
-- [ ] Testar em Android real com login e GPS.
-- [ ] Gerar AAB assinado.
-- [ ] Publicar em Internal testing no Google Play.
-- [ ] Corrigir issues encontrados nos testes de loja.
-- [ ] Promover para produção.
+- Verify the Cloudflare production deployment.
+- Smoke test `https://app.te-connect.com/` in a clean browser session.
+- Test onboarding, employee invitation, clock-in/out, approvals, audit, billing and logout.
+- Test a second company to confirm tenant isolation.
 
-Google Play: novos apps e atualizações devem mirar Android 16 / API 36 a partir de 31 de agosto de 2026.
+## 5. Mobile gate
 
-## Gate 5 — iOS
+### Android
+- Generate native project.
+- Configure package/signing.
+- Test native GPS on a real Android device.
+- Build signed AAB.
+- Internal testing in Play Console.
 
-- [ ] Executar `npx cap add ios` em macOS.
-- [ ] Executar `npm run mobile:sync`.
-- [ ] Configurar Bundle Identifier `com.teconnect.app` no Apple Developer.
-- [ ] Configurar assinatura, Team e provisioning.
-- [ ] Configurar ícone e Launch Screen.
-- [ ] Testar em iPhone físico.
-- [ ] Testar login, GPS, sessões, ponto e logout.
-- [ ] Distribuir pelo TestFlight.
-- [ ] Corrigir issues encontrados no App Review/TestFlight.
-- [ ] Submeter para App Store.
+### iOS
+- Generate native project on macOS/Xcode.
+- Configure bundle ID/signing.
+- Confirm location privacy usage descriptions.
+- Test native GPS on a real iPhone.
+- TestFlight validation.
 
-## Gate 6 — Comercial e legal
+## 6. Commercial gate
 
-- [ ] Aprovar preços, limites e política de upgrade/downgrade.
-- [ ] Publicar Termos de Utilização.
-- [ ] Publicar Política de Privacidade.
-- [ ] Definir retenção e eliminação de dados.
-- [ ] Definir processo de suporte e SLA.
-- [ ] Preparar informação de tratamento de dados/DPA quando necessária para clientes empresariais.
-- [ ] Preparar documentação de integrações/API.
-- [ ] Preparar página de contacto e suporte.
+- Live Stripe products/prices confirmed.
+- Trial, upgrade, downgrade and cancellation verified.
+- Pricing/limits finalized.
+- Terms, privacy, retention and support contacts published.
 
-## Regra de publicação
+## 7. Launch-day sequence — 23/09/2026
 
-Não publicar clientes pagantes em produção enquanto os gates de segurança, Auth real, Supabase Pro e smoke test de produção permanecerem abertos.
+1. Upgrade/verify Supabase Pro and required Auth security settings.
+2. Re-run advisors and critical smoke tests.
+3. Verify production web deployment.
+4. Run real-account Web smoke test.
+5. Complete signed Android/iOS verification available for the launch scope.
+6. Confirm billing path.
+7. Publish/announce the release.
+8. Keep rollback path and support contact available.
