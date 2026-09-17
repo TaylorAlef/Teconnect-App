@@ -9,6 +9,7 @@
     "preview": "vite preview",
     "deploy": "wrangler deploy",
     "check:branding": "node scripts/check-branding.mjs",
+    "check:globalization": "node scripts/check-globalization.mjs",
     "mobile:check": "node scripts/check-mobile.mjs",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:android": "npx cap open android",
