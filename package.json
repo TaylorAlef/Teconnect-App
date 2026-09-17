@@ -17,6 +17,7 @@
   "dependencies": {
     "@capacitor/android": "^8.5.2",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/geolocation": "^8.2.2",
     "@capacitor/ios": "^8.5.2",
     "@supabase/supabase-js": "^2.57.4",
     "lucide-react": "^0.468.0",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "@capacitor/cli": "^8.5.2",
+    "@vitejs/plugin-react": "^4.3.4",
     "@vitejs/plugin-react": "^4.3.4",
     "vite": "^6.0.7",
     "wrangler": "^4.133.0"
