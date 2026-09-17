@@ -1,0 +1,49 @@
+name: Te-connect Production Smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check production homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://app.te-connect.com/"
+          tmp="$(mktemp)"
+          status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o "$tmp" -w '%{http_code}' "$url")"
+          echo "Production HTTP status: $status"
+          test "$status" -ge 200
+          test "$status" -lt 400
+          grep -qi "Te-connect" "$tmp"
+          grep -qi "People OS" "$tmp"
+          echo "Production homepage smoke check passed."
+
+      - name: Check manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          manifest="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 https://app.te-connect.com/manifest.webmanifest)"
+          printf '%s' "$manifest" | grep -q 'Te-connect'
+          printf '%s' "$manifest" | grep -q 'People OS'
+          echo "Production manifest smoke check passed."
+
+      - name: Check public branding assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for asset in /teconnect-logo.svg /teconnect-brand-logo.css /global-locale-runtime.js /sw.js; do
+            status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /dev/null -w '%{http_code}' "https://app.te-connect.com${asset}")"
+            echo "$asset -> $status"
+            test "$status" -ge 200
+            test "$status" -lt 400
+          done
+          echo "Production static asset smoke check passed."
