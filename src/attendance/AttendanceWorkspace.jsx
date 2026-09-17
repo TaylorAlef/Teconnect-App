@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AlertTriangle, Check, CheckCircle2, Clock3, LocateFixed, LogOut, MapPin, Pause, Play, RefreshCw, ShieldCheck, UserCheck } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import { explainGeofenceError, getCurrentPosition, isInsideGeofence } from '../lib/geofence';
+import { explainGeofenceError, isInsideGeofence } from '../lib/geofence';
+import { getNativeCurrentPosition } from '../lib/native-geofence';
 import '../teconnect.css';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -18,6 +19,8 @@ const extraError = (error) => {
     EMPLOYEE_NOT_FOUND: 'Esta conta ainda não está associada a um colaborador. O RH precisa concluir o vínculo da conta.',
     LOCAL_SEM_COORDENADAS: 'Este local ainda não tem coordenadas GPS. Configure-as no cadastro do local.',
     WORK_LOCATION_NOT_FOUND: 'O local escolhido não está disponível para esta empresa.',
+    PERMISSION_LOCATION_DENIED: 'Permita a localização do dispositivo para registar o ponto.',
+    GEOLOCALIZACAO_NAO_DISPONIVEL: 'A localização do dispositivo não está disponível.',
   };
   return map[message] || explainGeofenceError(error);
 };
@@ -67,7 +70,7 @@ export default function AttendanceWorkspace({ profile, locations: initialLocatio
     setBusy(true); setLast(null);
     try {
       notify('A validar localização GPS…');
-      const position = await getCurrentPosition({ maximumAge: 0 });
+      const position = await getNativeCurrentPosition({ maximumAge: 0 });
       const validation = isInsideGeofence(position, location);
       if (!validation.ok) {
         setLast({ ok: false, distance: validation.distance, radius: validation.radius });
