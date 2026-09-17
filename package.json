@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "check:branding": "node scripts/check-branding.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
