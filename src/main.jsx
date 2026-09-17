@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
 import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import AttendanceWorkspace from './attendance/AttendanceWorkspace.jsx';
+import EmployeeAccessManager from './commercial/EmployeeAccessManager.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
@@ -24,6 +25,8 @@ function CommercialBridge() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [attendancePanel, setAttendancePanel] = useState(false);
   const [attendanceNotice, setAttendanceNotice] = useState(null);
+  const [attendanceLocations, setAttendanceLocations] = useState([]);
+  const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
 
   const loadCommercial = useCallback(async (activeSession) => {
     if (!activeSession) {
@@ -51,6 +54,16 @@ function CommercialBridge() {
       setBilling(null);
     }
   }, []);
+
+  const loadAttendanceContext = useCallback(async () => {
+    if (!profile?.company_id) return;
+    const [locationsResult, anomaliesResult] = await Promise.all([
+      supabase.from('work_locations').select('id,name,address,latitude,longitude,gps_radius_m,active').eq('company_id', profile.company_id).eq('active', true).order('name'),
+      supabase.from('attendance_days').select('id,employee_id,work_date,status,late_minutes,early_leave_minutes,overtime_minutes,night_minutes,worked_minutes').eq('company_id', profile.company_id).order('work_date', { ascending: false }).limit(100),
+    ]);
+    if (!locationsResult.error) setAttendanceLocations(locationsResult.data || []);
+    if (!anomaliesResult.error) setAttendanceAnomalies(anomaliesResult.data || []);
+  }, [profile?.company_id]);
 
   useEffect(() => {
     let active = true;
@@ -99,6 +112,11 @@ function CommercialBridge() {
     window.__teconnectAttendanceNotice = window.setTimeout(() => setAttendanceNotice(null), 4200);
   }, []);
 
+  const openAttendance = async () => {
+    await loadAttendanceContext();
+    setAttendancePanel(true);
+  };
+
   if (!session) return null;
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
   if (!profile) return null;
@@ -108,9 +126,10 @@ function CommercialBridge() {
       <TeconnectSuite profile={profile} />
       <EnterpriseCommandCenter profile={profile} billing={billing} />
       <div className="tc-product-chrome">
-        <button type="button" className="tc-btn primary tc-billing-trigger" onClick={() => setAttendancePanel(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real">
+        <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real">
           <Clock3 size={16} /> Ponto real
         </button>
+        <EmployeeAccessManager profile={profile} onToast={attendanceNotify} />
         <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
           <CreditCard size={16} /> Faturamento
         </button>
@@ -126,7 +145,7 @@ function CommercialBridge() {
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
               <button type="button" className="tc-btn" onClick={() => setAttendancePanel(false)}><X size={16} /> Fechar ponto</button>
             </div>
-            <AttendanceWorkspace profile={profile} locations={[]} anomalies={[]} notify={attendanceNotify} onReload={() => {}} />
+            <AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={attendanceNotify} onReload={loadAttendanceContext} />
           </div>
           {attendanceNotice && <div className={`tc-pill ${attendanceNotice.kind === 'error' ? 'tc-no' : 'tc-ok'}`} style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 130, padding: '12px 15px' }}>{attendanceNotice.kind === 'error' ? <Shield size={15} /> : <Clock3 size={15} />}{attendanceNotice.message}</div>}
         </div>
