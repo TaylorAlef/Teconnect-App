@@ -1,16 +1,14 @@
-/* Te-connect official brand lock for the SaaS suite */
-.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark {
-  width: 166px !important;
-  height: 48px !important;
-  display: block !important;
-  flex: 0 0 auto !important;
-  overflow: hidden !important;
-  color: transparent !important;
-  font-size: 0 !important;
-  background: transparent url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 250'%3E%3Crect width='1200' height='250' fill='none'/%3E%3Ccircle cx='239' cy='35' r='28' fill='%2305B7E8'/%3E%3Cpath fill='%23062B72' d='M72 69h152c25 0 47 10 61 30H11c14-20 36-30 61-30zm-8 30h132v48H64zm31 48h72v82H95z'/%3E%3Ctext x='285' y='188' font-family='Arial,Helvetica,sans-serif' font-size='132' font-weight='700' fill='%23062B72'%3ETe-connect%3C/text%3E%3C/svg%3E") center/contain no-repeat !important;
-  border: 0 !important;
-  box-shadow: none !important;
+/* Te-connect master brand for the SaaS suite */
+.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{
+  width:188px!important;
+  height:44px!important;
+  display:block!important;
+  flex:0 0 auto!important;
+  overflow:hidden!important;
+  color:transparent!important;
+  font-size:0!important;
+  background:transparent url('/teconnect-logo.svg') center/contain no-repeat!important;
+  border:0!important;
+  box-shadow:none!important;
 }
-@media (max-width:720px){
-  .suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{width:156px !important;height:46px !important}
-}
+@media(max-width:720px){.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{width:164px!important;height:40px!important}}
