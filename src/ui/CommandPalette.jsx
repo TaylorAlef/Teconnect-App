@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowRight, CalendarClock, CheckCircle2, Clock3, Command, FileText, Search, UserPlus, Users, X, Zap } from 'lucide-react';
+import './nextgen.css';
 
 const COMMANDS = [
   { id: 'overview', label: 'Abrir visão geral', hint: 'Painel executivo', icon: Zap, keywords: 'dashboard início painel' },
