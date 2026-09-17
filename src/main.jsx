@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Award, CheckCircle2, CreditCard, Settings2, Shield, UsersRound, Clock3, UserRound, X, LockKeyhole } from 'lucide-react';
+import { Activity, AlertTriangle, Award, CheckCircle2, CreditCard, Settings2, Shield, UsersRound, Clock3, UserRound, X, LockKeyhole, FileUp } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
@@ -16,6 +16,7 @@ import SuperAdminPage from './commercial/SuperAdminPage.jsx';
 import Employee360Panel from './people/Employee360Panel.jsx';
 import PerformanceCenter from './people/PerformanceCenter.jsx';
 import SelfServicePanel from './people/SelfServicePanel.jsx';
+import EmployeeImportPanel from './people/EmployeeImportPanel.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
 import ExceptionCenter from './ops/ExceptionCenter.jsx';
 import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
@@ -110,6 +111,7 @@ function CommercialBridge() {
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('setup')} title="Configurar organização"><Settings2 size={16} /> Setup</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('exceptions')} title="Fila unificada de exceções"><AlertTriangle size={16} /> Exceções</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('analytics')} title="Indicadores e tendências de pessoas"><Activity size={16} /> Analytics</button>
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('employee-import')} title="Importar equipa em massa"><FileUp size={16} /> Importar</button>
           <EmployeeAccessManager profile={profile} onToast={notify} />
           <PayrollControlCenter profile={profile} onToast={notify} />
           <AuditCenter profile={profile} onToast={notify} />
@@ -129,12 +131,13 @@ function CommercialBridge() {
         {panel === 'setup' && canManageHr && <SetupWizard profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'exceptions' && canManageHr && <ExceptionCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'analytics' && canManageHr && <PeopleAnalyticsCenter profile={profile} onClose={() => setPanel(null)} />}
+        {panel === 'employee-import' && canManageHr && <EmployeeImportPanel profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'billing' && canManageHr && <BillingPage />}
         {panel === 'super-admin' && profile.role === 'SUPER_ADMIN' && <SuperAdminPage />}
         {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
         {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
         {panel === 'audit' && canManageHr && <AuditCenter profile={profile} onToast={notify} />}
-        {!['security','self-service','approvals','people360','performance','setup','exceptions','analytics','billing','super-admin','employee-access','payroll','audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
+        {!['security','self-service','approvals','people360','performance','setup','exceptions','analytics','employee-import','billing','super-admin','employee-access','payroll','audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
       </div></div>}
     </>
   );
