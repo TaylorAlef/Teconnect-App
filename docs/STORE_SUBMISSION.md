@@ -1,55 +1,54 @@
 # Te-connect — Store Submission Pack
 
-## Identidade
+## Brand
 
-- Nome: Te-connect
-- Categoria prevista: Business / Productivity
-- Bundle ID / Application ID: `com.teconnect.app`
-- Idioma principal: pt-PT
-- URL comercial: `https://app.te-connect.com/`
+- Product: Te-connect
+- Category: Business / Human Resources
+- Primary brand asset: `public/teconnect-logo.svg`
+- Support domain: `https://app.te-connect.com/`
 
-## Descrição curta
+## Global launch positioning
 
-Gestão de pessoas, assiduidade, ponto, pedidos e operações de RH numa única plataforma.
-
-## Descrição longa — base de trabalho
-
-O Te-connect é uma plataforma empresarial para gestão de pessoas e operações de RH. Centraliza assiduidade, marcação de ponto, pedidos de colaboradores, aprovações, gestão de equipa, performance, tarefas e indicadores operacionais.
-
-Para colaboradores, o foco móvel é simples: consultar o seu estado e horas e registar entrada, pausa e saída. Para RH e administração, o Te-connect disponibiliza uma camada operacional para equipas, regras, aprovações, auditoria, performance, integrações e faturamento.
-
-A publicação final deve usar apenas funcionalidades realmente disponíveis e testadas na versão submetida.
-
-## Dados e privacidade
-
-Antes da submissão, preencher as declarações de privacidade exigidas por cada loja com base nos dados efetivamente tratados pelo produto. Não declarar funcionalidades, categorias de dados ou finalidades que não estejam implementadas e documentadas.
-
-## Materiais necessários
-
-- Ícone principal em resolução e formatos exigidos por cada loja.
-- Screenshots para telefone Android e iPhone.
-- Capturas que mostrem Ponto, Meu RH, Solicitar e áreas de gestão quando aplicável.
-- Ícone adaptativo e splash para Android.
-- App icon e Launch Screen para iOS.
-- URL de suporte.
-- URL de política de privacidade.
-- Termos de utilização.
-- Texto de revisão para explicar o fluxo de login empresarial e o uso de GPS no ponto.
+Initial store rollout should be prepared for multiple markets. Store descriptions should not claim country-specific labor compliance globally; present country-specific legal functionality only where verified.
 
 ## Android
 
-- AAB assinado.
-- Teste interno no Google Play.
-- Target Android 16 / API 36 ou superior para novos apps e atualizações em 2026.
-- Teste de autenticação, GPS, foreground/background, sessão persistente e logout.
+- Package ID: `com.teconnect.app`
+- Generate and sign an AAB.
+- Confirm current Google Play target API requirement before upload.
+- Add phone/tablet screenshots as required.
+- Add privacy policy URL and support URL.
+- Explain precise location usage for attendance/geofence.
 
 ## iOS
 
-- Archive assinado no Xcode.
-- TestFlight antes da submissão.
-- Teste em iPhone físico.
-- Teste de autenticação, GPS, lifecycle da app, sessão persistente e logout.
+- Bundle ID: `com.teconnect.app`
+- Build signed archive with Xcode.
+- Add location usage descriptions.
+- Add iPhone/iPad screenshots as required.
+- Add privacy policy URL and support URL.
+- Explain location usage for attendance/geofence.
 
-## Regra de qualidade
+## Listing localization
 
-A loja deve receber exatamente a mesma aplicação e o mesmo conjunto funcional que foi validado no ambiente de release. Qualquer capability adicional deve ser testada antes de ser declarada nos metadados da loja.
+Prepare localized store metadata at launch for:
+
+- Portuguese
+- English
+- Spanish
+- French
+- German
+
+Additional languages can be added without changing the app identifier or backend tenant model.
+
+## Release evidence
+
+Before submission, keep the following evidence attached to the release ticket:
+
+- signed build artifact;
+- clean-device smoke test;
+- privacy policy URL validation;
+- support contact validation;
+- production API/Auth smoke test;
+- tenant-isolation verification;
+- billing smoke test.
