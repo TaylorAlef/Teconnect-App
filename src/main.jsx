@@ -19,6 +19,8 @@ const supabase = createClient(
   { auth: { persistSession: true, autoRefreshToken: true } },
 );
 
+const ADMIN_HR_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
+
 function CommercialBridge() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -38,18 +40,25 @@ function CommercialBridge() {
       setNeedsOnboarding(false);
       return;
     }
-    const [profileResult, billingResult] = await Promise.all([
-      supabase.rpc('get_my_profile'),
-      supabase.rpc('get_my_billing'),
-    ]);
-    if (!profileResult.error) {
-      const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
-      setProfile(nextProfile || null);
-      setNeedsOnboarding(!nextProfile?.company_id);
-    } else {
+
+    const profileResult = await supabase.rpc('get_my_profile');
+    if (profileResult.error) {
       setProfile(null);
+      setBilling(null);
       setNeedsOnboarding(false);
+      return;
     }
+
+    const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
+    setProfile(nextProfile || null);
+    setNeedsOnboarding(!nextProfile?.company_id);
+
+    if (!nextProfile?.company_id || !ADMIN_HR_ROLES.has(nextProfile.role)) {
+      setBilling(null);
+      return;
+    }
+
+    const billingResult = await supabase.rpc('get_my_billing');
     if (!billingResult.error) {
       setBilling(Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data);
     } else {
@@ -123,6 +132,8 @@ function CommercialBridge() {
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
   if (!profile) return null;
 
+  const canManageHr = ADMIN_HR_ROLES.has(profile.role);
+
   return (
     <>
       <TeconnectSuite profile={profile} />
@@ -131,12 +142,14 @@ function CommercialBridge() {
         <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real">
           <Clock3 size={16} /> Ponto real
         </button>
-        <EmployeeAccessManager profile={profile} onToast={notify} />
-        <PayrollControlCenter profile={profile} onToast={notify} />
-        <AuditCenter profile={profile} onToast={notify} />
-        <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
-          <CreditCard size={16} /> Faturamento
-        </button>
+        {canManageHr && <>
+          <EmployeeAccessManager profile={profile} onToast={notify} />
+          <PayrollControlCenter profile={profile} onToast={notify} />
+          <AuditCenter profile={profile} onToast={notify} />
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
+            <CreditCard size={16} /> Faturamento
+          </button>
+        </>}
         {profile.role === 'SUPER_ADMIN' && (
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('super-admin')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
             <Shield size={16} /> Super Admin
@@ -160,11 +173,11 @@ function CommercialBridge() {
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}><button type="button" className="tc-btn" onClick={() => setPanel(null)}>Fechar</button></div>
-            {panel === 'billing' ? <BillingPage /> : <SuperAdminPage />}
+            {panel === 'billing' && canManageHr ? <BillingPage /> : <SuperAdminPage />}
           </div>
         </div>
       )}
-      {billing?.plan_code === 'STARTER' && (
+      {canManageHr && billing?.plan_code === 'STARTER' && (
         <div style={{ position: 'fixed', left: 22, bottom: 22, zIndex: 30, maxWidth: 360, display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 12, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(20,24,38,.92)', backdropFilter: 'blur(12px)', fontSize: 12 }}>
           <LockKeyhole size={15} /><span>Plano Starter: ERP e turnos avançados estão bloqueados.</span><button type="button" className="tc-btn primary tc-small" onClick={() => setPanel('billing')}>Upgrade</button>
         </div>
