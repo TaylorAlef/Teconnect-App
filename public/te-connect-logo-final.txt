@@ -1,1 +1,0 @@
-Use the exact uploaded logo asset already present in repository history.
