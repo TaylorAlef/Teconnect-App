@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { createRoot } from 'react-dom/client';
 import { CreditCard, LockKeyhole, Shield } from 'lucide-react';
+import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import App from './App.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
+import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
 import './styles.css';
 
@@ -18,12 +19,14 @@ function CommercialBridge() {
   const [profile, setProfile] = useState(null);
   const [billing, setBilling] = useState(null);
   const [panel, setPanel] = useState(null);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   const loadCommercial = useCallback(async (activeSession) => {
     if (!activeSession) {
       setProfile(null);
       setBilling(null);
       setPanel(null);
+      setNeedsOnboarding(false);
       return;
     }
 
@@ -35,9 +38,15 @@ function CommercialBridge() {
     if (!profileResult.error) {
       const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
       setProfile(nextProfile || null);
+      setNeedsOnboarding(!nextProfile?.company_id);
+    } else {
+      setProfile(null);
+      setNeedsOnboarding(false);
     }
     if (!billingResult.error) {
       setBilling(Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data);
+    } else {
+      setBilling(null);
     }
   }, []);
 
@@ -107,6 +116,10 @@ function CommercialBridge() {
   }, [billing?.plan_code, session]);
 
   if (!session) return null;
+
+  if (needsOnboarding) {
+    return <OnboardingPage onComplete={() => window.location.reload()} />;
+  }
 
   return (
     <>
