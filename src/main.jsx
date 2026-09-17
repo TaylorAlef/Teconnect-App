@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CreditCard, FileText, LockKeyhole, Shield, Clock3, X } from 'lucide-react';
+import { CreditCard, FileText, History, LockKeyhole, Shield, Clock3, X } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
 import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import AttendanceWorkspace from './attendance/AttendanceWorkspace.jsx';
+import AuditCenter from './audit/AuditCenter.jsx';
 import EmployeeAccessManager from './commercial/EmployeeAccessManager.jsx';
 import PayrollControlCenter from './payroll/PayrollControlCenter.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
@@ -132,6 +133,7 @@ function CommercialBridge() {
         </button>
         <EmployeeAccessManager profile={profile} onToast={notify} />
         <PayrollControlCenter profile={profile} onToast={notify} />
+        <AuditCenter profile={profile} onToast={notify} />
         <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
           <CreditCard size={16} /> Faturamento
         </button>
@@ -165,7 +167,7 @@ function CommercialBridge() {
       {billing?.plan_code === 'STARTER' && (
         <div style={{ position: 'fixed', left: 22, bottom: 22, zIndex: 30, maxWidth: 360, display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 12, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(20,24,38,.92)', backdropFilter: 'blur(12px)', fontSize: 12 }}>
           <LockKeyhole size={15} /><span>Plano Starter: ERP e turnos avançados estão bloqueados.</span><button type="button" className="tc-btn primary tc-small" onClick={() => setPanel('billing')}>Upgrade</button>
-      </div>
+        </div>
       )}
     </>
   );
