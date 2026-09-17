@@ -1,6 +1,13 @@
 name: Te-connect Production Smoke
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/production-smoke.yml'
+      - 'index.html'
+      - 'public/**'
+      - 'src/**'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
