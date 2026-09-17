@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Activity, ArrowRight, Bell, Building2, CheckCircle2, Clock3, FileText, RefreshCw, Users, X, Zap } from 'lucide-react';
+import { Activity, ArrowRight, Bell, Building2, CheckCircle2, Clock3, FileText, Globe2, RefreshCw, Users, X, Zap } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import GlobalizationCenter from './globalization/GlobalizationCenter.jsx';
+import { useCompanyLocalization } from './globalization/useCompanyLocalization.js';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -36,9 +38,12 @@ function Metric({ icon: Icon, label, value, detail, tone = 'neutral' }) {
 
 export default function EnterpriseCommandCenter({ profile, billing }) {
   const [open, setOpen] = useState(false);
+  const [showLocalization, setShowLocalization] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState({ employees: 0, alerts: 0, tasks: 0, payroll: null, locations: 0 });
   const [lastSync, setLastSync] = useState(null);
+  const localization = useCompanyLocalization(profile?.company_id);
+  const { t, preferences } = localization;
 
   const load = useCallback(async () => {
     if (!profile?.company_id) return;
@@ -71,13 +76,16 @@ export default function EnterpriseCommandCenter({ profile, billing }) {
   const attention = data.alerts > 0 || data.tasks > 0;
   const plan = billing?.plan_code || 'Plano';
   const role = profile?.role || 'Utilizador';
+  const updatedTime = lastSync
+    ? new Intl.DateTimeFormat(preferences.locale, { timeStyle: 'short', timeZone: preferences.timeZone }).format(lastSync)
+    : null;
 
   return (
     <>
       <button
         type="button"
-        onClick={() => setOpen(true)}
-        title="Abrir centro de operações"
+        onClick={() => { setShowLocalization(false); setOpen(true); }}
+        title={t('operations.title')}
         style={{ position: 'fixed', right: 22, bottom: 92, zIndex: 40, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,.13)', background: 'rgba(13,18,31,.88)', color: '#fff', boxShadow: '0 12px 34px rgba(0,0,0,.24)', backdropFilter: 'blur(16px)', cursor: 'pointer' }}
       >
         <Activity size={15} />
@@ -86,63 +94,72 @@ export default function EnterpriseCommandCenter({ profile, billing }) {
       </button>
 
       {open && (
-        <div role="dialog" aria-modal="true" aria-label="Centro de operações" style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(2,6,23,.70)', backdropFilter: 'blur(10px)', overflow: 'auto', padding: '44px 20px' }}>
+        <div role="dialog" aria-modal="true" aria-label={t('operations.title')} style={{ position: 'fixed', inset: 0, zIndex: 120, background: 'rgba(2,6,23,.70)', backdropFilter: 'blur(10px)', overflow: 'auto', padding: '44px 20px' }}>
           <div className="tc-enterprise-panel" style={{ width: 'min(920px, 100%)', margin: '0 auto', border: '1px solid rgba(255,255,255,.11)', borderRadius: 22, background: 'linear-gradient(180deg,#111a2a,#0b111d)', boxShadow: '0 30px 90px rgba(0,0,0,.42)', overflow: 'hidden' }}>
-            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '22px 24px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
-              <div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#93c5fd', fontSize: 10, fontWeight: 800, letterSpacing: '.10em', textTransform: 'uppercase' }}><Activity size={13} /> Operação</div>
-                <h2 style={{ margin: '7px 0 3px', fontSize: 24, letterSpacing: '-.035em' }}>Centro de operações</h2>
-                <p style={{ margin: 0, color: 'rgba(255,255,255,.52)', fontSize: 12 }}>{profile?.company_name || 'Empresa'} · {role}</p>
+            {showLocalization ? (
+              <div style={{ padding: 24 }}>
+                <GlobalizationCenter profile={profile} localization={localization} onClose={() => setShowLocalization(false)} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ padding: '6px 9px', borderRadius: 999, background: 'rgba(59,130,246,.09)', border: '1px solid rgba(59,130,246,.16)', color: '#a9c9ff', fontSize: 9, fontWeight: 800 }}>{plan}</span>
-                <button type="button" onClick={() => setOpen(false)} aria-label="Fechar" style={{ border: 0, background: 'rgba(255,255,255,.07)', color: '#fff', width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', cursor: 'pointer' }}><X size={17} /></button>
-              </div>
-            </header>
+            ) : (
+              <>
+                <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18, padding: '22px 24px', borderBottom: '1px solid rgba(255,255,255,.08)' }}>
+                  <div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#93c5fd', fontSize: 10, fontWeight: 800, letterSpacing: '.10em', textTransform: 'uppercase' }}><Activity size={13} /> {t('operations.title')}</div>
+                    <h2 style={{ margin: '7px 0 3px', fontSize: 24, letterSpacing: '-.035em' }}>{t('operations.title')}</h2>
+                    <p style={{ margin: 0, color: 'rgba(255,255,255,.52)', fontSize: 12 }}>{profile?.company_name || 'Empresa'} · {role} · {preferences.locale} · {preferences.currency}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <button type="button" onClick={() => setShowLocalization(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 10px', borderRadius: 999, border: '1px solid rgba(124,140,255,.20)', background: 'rgba(124,140,255,.08)', color: '#c4caff', fontSize: 9, fontWeight: 800, cursor: 'pointer' }}><Globe2 size={13} /> {t('operations.global')}</button>
+                    <span style={{ padding: '6px 9px', borderRadius: 999, background: 'rgba(59,130,246,.09)', border: '1px solid rgba(59,130,246,.16)', color: '#a9c9ff', fontSize: 9, fontWeight: 800 }}>{plan}</span>
+                    <button type="button" onClick={() => setOpen(false)} aria-label="Fechar" style={{ border: 0, background: 'rgba(255,255,255,.07)', color: '#fff', width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', cursor: 'pointer' }}><X size={17} /></button>
+                  </div>
+                </header>
 
-            <main style={{ padding: 22 }}>
-              <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)', marginBottom: 14 }}>
-                <div>
-                  <span style={{ display: 'block', color: 'rgba(255,255,255,.48)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em' }}>Estado atual</span>
-                  <strong style={{ display: 'block', marginTop: 4, fontSize: 21 }}>{attention ? 'Atenção necessária' : 'Operação estável'}</strong>
-                  <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{lastSync ? `Atualizado às ${lastSync.toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}` : 'A sincronizar dados reais'}</span>
-                </div>
-                <button type="button" onClick={load} disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid rgba(255,255,255,.09)', borderRadius: 10, padding: '9px 11px', background: 'rgba(255,255,255,.05)', color: '#fff', cursor: 'pointer', fontSize: 10 }}>
-                  <RefreshCw size={13} style={{ animation: loading ? 'tcSpin 1s linear infinite' : 'none' }} /> Atualizar
-                </button>
-              </section>
-
-              <section className="tc-enterprise-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 10 }}>
-                <Metric icon={Users} label="Colaboradores" value={data.employees} detail="ativos" tone="neutral" />
-                <Metric icon={Bell} label="Alertas" value={data.alerts} detail={data.alerts ? 'a verificar' : 'nenhum aberto'} tone={data.alerts ? 'warn' : 'good'} />
-                <Metric icon={CheckCircle2} label="Tarefas" value={data.tasks} detail="pendentes" tone={data.tasks ? 'warn' : 'good'} />
-                <Metric icon={Building2} label="Locais" value={data.locations} detail="ativos" tone={data.locations ? 'good' : 'warn'} />
-              </section>
-
-              <section style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <div style={{ padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><Clock3 size={15} style={{ color: '#93c5fd' }} /><strong style={{ fontSize: 12 }}>Ponto</strong></div>
-                  <strong style={{ fontSize: 17 }}>{data.locations ? 'Configurado' : 'Configuração pendente'}</strong>
-                  <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{data.locations ? 'Há local ativo para assiduidade.' : 'Adicione um local de trabalho.'}</span>
-                </div>
-                <div style={{ padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><FileText size={15} style={{ color: '#93c5fd' }} /><strong style={{ fontSize: 12 }}>Folha</strong></div>
-                  <strong style={{ fontSize: 17 }}>{data.payroll?.status || 'Sem ciclo'}</strong>
-                  <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{monthLabel(data.payroll)}</span>
-                </div>
-              </section>
-
-              <section style={{ marginTop: 16 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><Zap size={15} /><strong style={{ fontSize: 12 }}>Acesso rápido</strong></div>
-                <div className="tc-enterprise-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8 }}>
-                  {[['Colaboradores', Users], ['Ponto', Clock3], ['Tarefas RH', CheckCircle2], ['Alertas', Bell]].map(([label, Icon]) => (
-                    <button key={label} type="button" onClick={() => { setOpen(false); jumpTo(label); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '11px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.035)', color: '#fff', cursor: 'pointer', fontSize: 10 }}>
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Icon size={14} />{label}</span><ArrowRight size={12} />
+                <main style={{ padding: 22 }}>
+                  <section style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)', marginBottom: 14 }}>
+                    <div>
+                      <span style={{ display: 'block', color: 'rgba(255,255,255,.48)', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.08em' }}>Estado atual</span>
+                      <strong style={{ display: 'block', marginTop: 4, fontSize: 21 }}>{attention ? t('state.attention') : t('state.stable')}</strong>
+                      <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{lastSync ? `${t('state.updated')} ${updatedTime}` : t('state.syncing')}</span>
+                    </div>
+                    <button type="button" onClick={load} disabled={loading} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, border: '1px solid rgba(255,255,255,.09)', borderRadius: 10, padding: '9px 11px', background: 'rgba(255,255,255,.05)', color: '#fff', cursor: 'pointer', fontSize: 10 }}>
+                      <RefreshCw size={13} style={{ animation: loading ? 'tcSpin 1s linear infinite' : 'none' }} /> Atualizar
                     </button>
-                  ))}
-                </div>
-              </section>
-            </main>
+                  </section>
+
+                  <section className="tc-enterprise-metrics" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 10 }}>
+                    <Metric icon={Users} label="Colaboradores" value={data.employees} detail="ativos" tone="neutral" />
+                    <Metric icon={Bell} label="Alertas" value={data.alerts} detail={data.alerts ? 'a verificar' : 'nenhum aberto'} tone={data.alerts ? 'warn' : 'good'} />
+                    <Metric icon={CheckCircle2} label="Tarefas" value={data.tasks} detail="pendentes" tone={data.tasks ? 'warn' : 'good'} />
+                    <Metric icon={Building2} label="Locais" value={data.locations} detail="ativos" tone={data.locations ? 'good' : 'warn'} />
+                  </section>
+
+                  <section style={{ marginTop: 14, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div style={{ padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><Clock3 size={15} style={{ color: '#93c5fd' }} /><strong style={{ fontSize: 12 }}>Ponto</strong></div>
+                      <strong style={{ fontSize: 17 }}>{data.locations ? 'Configurado' : 'Configuração pendente'}</strong>
+                      <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{data.locations ? 'Há local ativo para assiduidade.' : 'Adicione um local de trabalho.'}</span>
+                    </div>
+                    <div style={{ padding: 16, borderRadius: 15, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.025)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><FileText size={15} style={{ color: '#93c5fd' }} /><strong style={{ fontSize: 12 }}>Folha</strong></div>
+                      <strong style={{ fontSize: 17 }}>{data.payroll?.status || 'Sem ciclo'}</strong>
+                      <span style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.45)', fontSize: 10 }}>{monthLabel(data.payroll)}</span>
+                    </div>
+                  </section>
+
+                  <section style={{ marginTop: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}><Zap size={15} /><strong style={{ fontSize: 12 }}>Acesso rápido</strong></div>
+                    <div className="tc-enterprise-actions" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,minmax(0,1fr))', gap: 8 }}>
+                      {[['Colaboradores', Users], ['Ponto', Clock3], ['Tarefas RH', CheckCircle2], ['Alertas', Bell]].map(([label, Icon]) => (
+                        <button key={label} type="button" onClick={() => { setOpen(false); jumpTo(label); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '11px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.08)', background: 'rgba(255,255,255,.035)', color: '#fff', cursor: 'pointer', fontSize: 10 }}>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><Icon size={14} />{label}</span><ArrowRight size={12} />
+                        </button>
+                      ))}
+                    </div>
+                  </section>
+                </main>
+              </>
+            )}
           </div>
         </div>
       )}
