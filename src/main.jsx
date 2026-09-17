@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { CreditCard, LockKeyhole, Shield, Clock3, X } from 'lucide-react';
+import { CreditCard, FileText, LockKeyhole, Shield, Clock3, X } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
 import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import AttendanceWorkspace from './attendance/AttendanceWorkspace.jsx';
 import EmployeeAccessManager from './commercial/EmployeeAccessManager.jsx';
+import PayrollControlCenter from './payroll/PayrollControlCenter.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
@@ -106,10 +107,10 @@ function CommercialBridge() {
     return () => { observer.disconnect(); cleanups.forEach((cleanup) => cleanup()); };
   }, [billing?.plan_code, session]);
 
-  const attendanceNotify = useCallback((message, kind = 'ok') => {
+  const notify = useCallback((message, kind = 'ok') => {
     setAttendanceNotice({ message, kind });
-    window.clearTimeout(window.__teconnectAttendanceNotice);
-    window.__teconnectAttendanceNotice = window.setTimeout(() => setAttendanceNotice(null), 4200);
+    window.clearTimeout(window.__teconnectGlobalNotice);
+    window.__teconnectGlobalNotice = window.setTimeout(() => setAttendanceNotice(null), 4200);
   }, []);
 
   const openAttendance = async () => {
@@ -129,7 +130,8 @@ function CommercialBridge() {
         <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real">
           <Clock3 size={16} /> Ponto real
         </button>
-        <EmployeeAccessManager profile={profile} onToast={attendanceNotify} />
+        <EmployeeAccessManager profile={profile} onToast={notify} />
+        <PayrollControlCenter profile={profile} onToast={notify} />
         <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
           <CreditCard size={16} /> Faturamento
         </button>
@@ -139,17 +141,19 @@ function CommercialBridge() {
           </button>
         )}
       </div>
+
       {attendancePanel && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 110, overflow: 'auto', background: 'rgba(4,8,18,.94)', backdropFilter: 'blur(12px)', padding: '28px 26px 50px' }}>
           <div style={{ maxWidth: 1380, margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}>
               <button type="button" className="tc-btn" onClick={() => setAttendancePanel(false)}><X size={16} /> Fechar ponto</button>
             </div>
-            <AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={attendanceNotify} onReload={loadAttendanceContext} />
+            <AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={notify} onReload={loadAttendanceContext} />
           </div>
           {attendanceNotice && <div className={`tc-pill ${attendanceNotice.kind === 'error' ? 'tc-no' : 'tc-ok'}`} style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 130, padding: '12px 15px' }}>{attendanceNotice.kind === 'error' ? <Shield size={15} /> : <Clock3 size={15} />}{attendanceNotice.message}</div>}
         </div>
       )}
+
       {panel && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}>
           <div style={{ maxWidth: 1280, margin: '0 auto' }}>
@@ -161,7 +165,7 @@ function CommercialBridge() {
       {billing?.plan_code === 'STARTER' && (
         <div style={{ position: 'fixed', left: 22, bottom: 22, zIndex: 30, maxWidth: 360, display: 'flex', alignItems: 'center', gap: 9, padding: '10px 13px', borderRadius: 12, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(20,24,38,.92)', backdropFilter: 'blur(12px)', fontSize: 12 }}>
           <LockKeyhole size={15} /><span>Plano Starter: ERP e turnos avançados estão bloqueados.</span><button type="button" className="tc-btn primary tc-small" onClick={() => setPanel('billing')}>Upgrade</button>
-        </div>
+      </div>
       )}
     </>
   );
