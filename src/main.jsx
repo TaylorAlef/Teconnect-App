@@ -6,6 +6,8 @@ import App from './App.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
+import CommandPalette from './ui/CommandPalette.jsx';
+import RealtimeStatus from './ui/RealtimeStatus.jsx';
 import './styles.css';
 
 const supabase = createClient(
@@ -123,10 +125,11 @@ function CommercialBridge() {
 
   return (
     <>
-      <div style={{ position: 'fixed', right: 22, top: 82, zIndex: 40, display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div className="tc-product-chrome">
+        <RealtimeStatus />
         <button
           type="button"
-          className="tc-btn ghost"
+          className="tc-btn ghost tc-billing-trigger"
           onClick={() => setPanel('billing')}
           style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}
         >
@@ -135,7 +138,7 @@ function CommercialBridge() {
         {profile?.role === 'SUPER_ADMIN' && (
           <button
             type="button"
-            className="tc-btn ghost"
+            className="tc-btn ghost tc-billing-trigger"
             onClick={() => setPanel('super-admin')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}
           >
@@ -164,6 +167,8 @@ function CommercialBridge() {
           <button type="button" className="tc-btn primary tc-small" onClick={() => setPanel('billing')}>Upgrade</button>
         </div>
       )}
+
+      <CommandPalette />
     </>
   );
 }
