@@ -78,11 +78,11 @@ export default function EnterpriseCommandCenter({ profile, billing }) {
         type="button"
         onClick={() => setOpen(true)}
         title="Abrir centro de operações"
-        style={{ position: 'fixed', right: 22, bottom: 22, zIndex: 40, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 14px', borderRadius: 13, border: '1px solid rgba(255,255,255,.13)', background: 'rgba(13,18,31,.92)', color: '#fff', boxShadow: '0 16px 44px rgba(0,0,0,.28)', backdropFilter: 'blur(16px)', cursor: 'pointer' }}
+        style={{ position: 'fixed', right: 22, bottom: 92, zIndex: 40, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '9px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,.13)', background: 'rgba(13,18,31,.88)', color: '#fff', boxShadow: '0 12px 34px rgba(0,0,0,.24)', backdropFilter: 'blur(16px)', cursor: 'pointer' }}
       >
-        <Activity size={16} />
-        <span style={{ fontWeight: 700, fontSize: 12 }}>Centro de operações</span>
-        <span style={{ width: 7, height: 7, borderRadius: 999, background: attention ? '#fbbf24' : '#4ade80' }} />
+        <Activity size={15} />
+        <span style={{ fontWeight: 700, fontSize: 11 }}>Operações</span>
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: attention ? '#fbbf24' : '#4ade80' }} />
       </button>
 
       {open && (
