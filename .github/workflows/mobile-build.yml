@@ -10,6 +10,7 @@ on:
       - 'index.html'
       - 'package.json'
       - 'capacitor.config.ts'
+      - 'scripts/prepare-native-permissions.mjs'
       - '.github/workflows/mobile-build.yml'
 
 permissions:
@@ -39,6 +40,8 @@ jobs:
         run: npx cap add android
       - name: Sync Capacitor Android
         run: npx cap sync android
+      - name: Verify Android location permissions
+        run: npm run mobile:prepare:android
       - name: Build Android debug APK
         run: ./gradlew assembleDebug --no-daemon
         working-directory: android
@@ -66,6 +69,8 @@ jobs:
         run: npx cap add ios
       - name: Sync Capacitor iOS
         run: npx cap sync ios
+      - name: Prepare iOS location permissions
+        run: npm run mobile:prepare:ios
       - name: Build iOS simulator target
         run: >-
           xcodebuild
