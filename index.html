@@ -2,23 +2,35 @@
 <html lang="pt-PT">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#070b14" />
-    <meta name="application-name" content="Teconnect" />
-    <meta name="description" content="Teconnect People OS — plataforma empresarial para gestão de pessoas, assiduidade, ponto, tarefas, alertas, turnos e operações de RH." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#07101f" />
+    <meta name="application-name" content="Te-connect" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Te-connect" />
+    <meta name="description" content="Te-connect People OS — plataforma empresarial para gestão de pessoas, assiduidade, ponto, tarefas, alertas, turnos e operações de RH." />
     <meta name="robots" content="noindex,nofollow" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Teconnect" />
-    <meta property="og:title" content="Teconnect — People OS para empresas" />
+    <meta property="og:site_name" content="Te-connect" />
+    <meta property="og:title" content="Te-connect — People OS para empresas" />
     <meta property="og:description" content="Gestão empresarial de pessoas, assiduidade e operações de RH numa única plataforma." />
     <meta name="twitter:card" content="summary" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="/teconnect-logo.svg" />
+    <link rel="apple-touch-icon" href="/teconnect-logo.svg" />
     <link rel="stylesheet" href="/teconnect-brand-logo.css" />
     <link rel="stylesheet" href="/teconnect-suite-logo.css" />
-    <title>Teconnect — People OS para empresas</title>
+    <title>Te-connect — People OS para empresas</title>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+      }
+    </script>
   </body>
 </html>
