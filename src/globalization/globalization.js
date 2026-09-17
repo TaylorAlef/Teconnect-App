@@ -1,6 +1,10 @@
 const STORAGE_KEY = 'teconnect.global.preferences';
 
-export const SUPPORTED_LOCALES = ['pt-PT', 'en-US', 'es-ES', 'fr-FR', 'de-DE'];
+export const SUPPORTED_LOCALES = [
+  'pt-PT', 'pt-BR', 'en-US', 'en-GB', 'en-IE', 'en-CA', 'en-AU', 'en-NZ', 'en-SG', 'en-ZA',
+  'es-ES', 'es-MX', 'es-AR', 'es-CL', 'es-CO',
+  'fr-FR', 'fr-BE', 'de-DE', 'de-AT', 'de-CH', 'it-IT', 'nl-NL', 'ja-JP', 'ar-AE',
+];
 
 export const COUNTRY_DEFAULTS = {
   PT: { locale: 'pt-PT', currency: 'EUR', timeZone: 'Europe/Lisbon' },
@@ -8,24 +12,30 @@ export const COUNTRY_DEFAULTS = {
   ES: { locale: 'es-ES', currency: 'EUR', timeZone: 'Europe/Madrid' },
   FR: { locale: 'fr-FR', currency: 'EUR', timeZone: 'Europe/Paris' },
   DE: { locale: 'de-DE', currency: 'EUR', timeZone: 'Europe/Berlin' },
-  AT: { locale: 'de-DE', currency: 'EUR', timeZone: 'Europe/Vienna' },
-  CH: { locale: 'de-DE', currency: 'CHF', timeZone: 'Europe/Zurich' },
-  GB: { locale: 'en-US', currency: 'GBP', timeZone: 'Europe/London' },
-  IE: { locale: 'en-US', currency: 'EUR', timeZone: 'Europe/Dublin' },
+  IT: { locale: 'it-IT', currency: 'EUR', timeZone: 'Europe/Rome' },
+  NL: { locale: 'nl-NL', currency: 'EUR', timeZone: 'Europe/Amsterdam' },
+  BE: { locale: 'fr-BE', currency: 'EUR', timeZone: 'Europe/Brussels' },
+  AT: { locale: 'de-AT', currency: 'EUR', timeZone: 'Europe/Vienna' },
+  CH: { locale: 'de-CH', currency: 'CHF', timeZone: 'Europe/Zurich' },
+  IE: { locale: 'en-IE', currency: 'EUR', timeZone: 'Europe/Dublin' },
+  GB: { locale: 'en-GB', currency: 'GBP', timeZone: 'Europe/London' },
   US: { locale: 'en-US', currency: 'USD', timeZone: 'America/New_York' },
-  CA: { locale: 'en-US', currency: 'CAD', timeZone: 'America/Toronto' },
-  AU: { locale: 'en-US', currency: 'AUD', timeZone: 'Australia/Sydney' },
-  MX: { locale: 'es-ES', currency: 'MXN', timeZone: 'America/Mexico_City' },
+  CA: { locale: 'en-CA', currency: 'CAD', timeZone: 'America/Toronto' },
+  AU: { locale: 'en-AU', currency: 'AUD', timeZone: 'Australia/Sydney' },
+  NZ: { locale: 'en-NZ', currency: 'NZD', timeZone: 'Pacific/Auckland' },
+  MX: { locale: 'es-MX', currency: 'MXN', timeZone: 'America/Mexico_City' },
+  AR: { locale: 'es-AR', currency: 'ARS', timeZone: 'America/Argentina/Buenos_Aires' },
+  CL: { locale: 'es-CL', currency: 'CLP', timeZone: 'America/Santiago' },
+  CO: { locale: 'es-CO', currency: 'COP', timeZone: 'America/Bogota' },
+  SG: { locale: 'en-SG', currency: 'SGD', timeZone: 'Asia/Singapore' },
+  JP: { locale: 'ja-JP', currency: 'JPY', timeZone: 'Asia/Tokyo' },
+  AE: { locale: 'ar-AE', currency: 'AED', timeZone: 'Asia/Dubai' },
+  ZA: { locale: 'en-ZA', currency: 'ZAR', timeZone: 'Africa/Johannesburg' },
 };
 
 const LOCALE_ALIASES = {
-  'pt': 'pt-PT',
-  'pt-br': 'pt-BR',
-  'en': 'en-US',
-  'en-gb': 'en-US',
-  'es': 'es-ES',
-  'fr': 'fr-FR',
-  'de': 'de-DE',
+  pt: 'pt-PT', 'pt-br': 'pt-BR', en: 'en-US', 'en-gb': 'en-GB', es: 'es-ES', fr: 'fr-FR', de: 'de-DE',
+  it: 'it-IT', nl: 'nl-NL', ja: 'ja-JP', ar: 'ar-AE',
 };
 
 function normalizeLocale(value) {
@@ -33,8 +43,13 @@ function normalizeLocale(value) {
   const raw = String(value).trim();
   const lower = raw.toLowerCase();
   if (LOCALE_ALIASES[lower]) return LOCALE_ALIASES[lower];
-  if (SUPPORTED_LOCALES.includes(raw)) return raw;
-  return SUPPORTED_LOCALES.find((locale) => locale.toLowerCase() === lower) || null;
+  const known = SUPPORTED_LOCALES.find((locale) => locale.toLowerCase() === lower);
+  if (known) return known;
+  try {
+    return Intl.getCanonicalLocales(raw)[0] || null;
+  } catch {
+    return null;
+  }
 }
 
 export function detectBrowserLocale() {
@@ -140,6 +155,7 @@ export function applyDocumentLocale(input = {}) {
     document.documentElement.dataset.locale = preferences.locale;
     document.documentElement.dataset.country = preferences.countryCode || '';
     document.documentElement.dataset.currency = preferences.currency;
+    document.documentElement.dataset.timezone = preferences.timeZone;
   }
   return preferences;
 }
