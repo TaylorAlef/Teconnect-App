@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     if (!['STARTER','BUSINESS','ENTERPRISE'].includes(code)) return json({ error: 'INVALID_PLAN' }, 400);
     const priceId = Deno.env.get(`STRIPE_PRICE_${code}`); const secret = Deno.env.get('STRIPE_SECRET_KEY');
     if (!priceId || !secret) return json({ error: 'BILLING_NOT_CONFIGURED' }, 503);
-    const origin = req.headers.get('origin') || Deno.env.get('APP_URL') || 'https://mmconnect.pt';
+    const origin = req.headers.get('origin') || Deno.env.get('APP_URL') || 'https://app.te-connect.com';
     const form = new URLSearchParams(); form.set('mode','subscription'); form.set('line_items[0][price]',priceId); form.set('line_items[0][quantity]','1'); form.set('success_url',`${origin}/?billing=success`); form.set('cancel_url',`${origin}/?billing=cancelled`); form.set('customer_email',user.email || ''); form.set('client_reference_id',profile.company_id); form.set('metadata[company_id]',profile.company_id); form.set('metadata[plan_code]',code); form.set('subscription_data[metadata][company_id]',profile.company_id); form.set('subscription_data[metadata][plan_code]',code);
     const response = await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/x-www-form-urlencoded'},body:form}); const data=await response.json();
     if (!response.ok) return json({error:'STRIPE_CHECKOUT_ERROR',details:data?.error?.message || 'Stripe rejected the request'},502); return json({url:data.url,session_id:data.id});
