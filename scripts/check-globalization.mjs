@@ -27,7 +27,7 @@ for (const locale of ['pt-PT', 'en-US', 'es-ES', 'fr-FR', 'de-DE']) {
 }
 
 const hook = fs.readFileSync(path.resolve(process.cwd(), 'src/globalization/useCompanyLocalization.js'), 'utf8');
-for (const token of ['company_settings', 'useCompanyLocalization', 'applyDocumentLocale']) {
+for (const token of ['company_settings', 'useCompanyLocalization', 'applyDocumentLocale', 'useStored: false']) {
   if (!hook.includes(token)) throw new Error(`Localization runtime token missing: ${token}`);
 }
 
