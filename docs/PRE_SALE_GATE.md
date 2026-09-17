@@ -1,37 +1,27 @@
-# Te-connect — Pre-Sale Gate
+# Te-connect — Pre-sale Gate
 
-## Technical gate status — 2026-09-17
+The product is being prepared for a 23 September 2026 launch. This document tracks the gates that must be closed before accepting paying customers.
 
-### Passed
-- Production frontend CI: `npm install`, production build and branding guard pass on `main`.
-- Public schema tables: 55/55 have Row Level Security enabled.
-- Public RLS policies: 0 remain.
-- Anonymous executable public functions: 0 remain.
-- Privileged HR operational tables use authenticated-only SELECT policies.
-- HR task and payroll UPDATE policies require the same tenant + HR/admin boundary in both `USING` and `WITH CHECK`.
-- Residual anonymous grants on legacy application RPCs were removed.
-- Trigger-only functions are no longer callable as RPC endpoints.
-- Unauthenticated direct-call sanity checks reject protected operations before any business action.
+## Passed / prepared
 
-### Role test — blocked until real auth users exist
-Current production data does not contain a complete role matrix. The current profile inventory contains only `COMPANY_ADMIN` users; the employee table currently contains two active employees with no linked auth users.
+- Multi-tenant RLS/security hardening completed and negative authorization tests exist.
+- P0 onboarding and attendance loop implemented.
+- Employee access, self-service, approvals, audit, payroll preparation and enterprise API/webhook foundations implemented.
+- Capacitor Android/iOS foundations and native GPS adapter merged.
+- Global Foundation V1 merged; production localization schema added with safe Portugal defaults.
+- Global V2 localization UI is under CI review.
 
-Required runtime matrix:
-- EMPLOYEE
-- GESTOR
-- SUPERVISOR
-- RH
-- COMPANY_ADMIN
-- SUPER_ADMIN
+## Must be closed before paid launch
 
-Do not create detached `profiles` rows as a substitute for real Auth users. The runtime matrix must use actual `auth.users` identities linked to the corresponding profiles and employees.
+1. Real authenticated E2E users in the isolated test environment and browser login matrix for Company Admin, RH, Gestor, Supervisor, Employee and a second company.
+2. Enable Supabase leaked password protection.
+3. Decide and enforce administrator MFA.
+4. Upgrade production Supabase to Pro.
+5. Re-run security/performance advisors after the upgrade and review every externally executable SECURITY DEFINER function intentionality.
+6. Verify the production edge deployment and browser smoke test on `https://app.te-connect.com/`.
+7. Finalize pricing, limits, terms, privacy, retention and support policies.
+8. Complete at least one signed mobile runtime path (Android or iOS) with real GPS attendance testing before declaring mobile launch complete.
 
-### Remaining manual launch gates
-- Enable Supabase leaked password protection.
-- Decide and document MFA enforcement policy for customer administrators.
-- Upgrade Supabase to Pro before onboarding paying customers.
-- Verify production Cloudflare deployment and run browser smoke tests against the public domain.
-- Finalize pricing/limits, terms, privacy, retention and support documentation.
+## Launch principle
 
-## Security note
-Supabase may still report generic `SECURITY DEFINER` warnings for intentionally exposed authenticated RPCs. These should be reviewed function-by-function; the presence of the warning alone is not treated as evidence of a tenant-isolation failure.
+Do not use production data as an E2E fixture. Use the isolated test project for synthetic security and role tests, and use production only for final smoke tests with real authorized accounts.
