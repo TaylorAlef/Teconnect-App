@@ -1,7 +1,10 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
+  "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "teconnect-app",
-  "compatibility_date": "2026-09-15",
+  "compatibility_date": "2026-09-17",
+  "build": {
+    "command": "npm run build"
+  },
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
