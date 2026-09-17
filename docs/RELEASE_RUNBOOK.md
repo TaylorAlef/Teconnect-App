@@ -2,7 +2,7 @@
 
 ## Scope
 
-This runbook is the release contract for the commercial launch planned for 23 September 2026.
+This runbook is the release contract for the commercial launch planned for **23 September 2026**.
 
 ## 1. Code gate
 
@@ -10,16 +10,16 @@ This runbook is the release contract for the commercial launch planned for 23 Se
 - `npm run check:branding` must pass.
 - `npm run check:globalization` must pass.
 - `npm run mobile:check` must pass.
+- Native Android and iOS CI generation/build must pass for the release commit.
 - No unfinished demo-only path may be the production default.
 
 ## 2. Backend/security gate
 
 - Production migration set is current.
-- RLS enabled and tenant isolation verified.
-- No anonymous execution of privileged RPCs.
+- **55/55 public tables currently have RLS enabled.**
+- Production diagnostic currently shows **0 public functions executable by `anon`**.
 - Review the Supabase security advisor warnings for every SECURITY DEFINER function exposed to `authenticated`.
-- Enable leaked password protection.
-- Define and enforce administrator MFA.
+- Treat provider-level security settings as launch blockers: enable leaked password protection and define/enforce administrator MFA.
 - Confirm backups/PITR and retention suitable for paid production.
 - Confirm production organization/project is on the required paid plan before accepting customers.
 
@@ -41,16 +41,17 @@ This runbook is the release contract for the commercial launch planned for 23 Se
 ## 5. Mobile gate
 
 ### Android
-- Generate native project.
+- Generate native project in CI — covered.
+- Verify native location permissions — covered by CI preparation.
 - Configure package/signing.
 - Test native GPS on a real Android device.
 - Build signed AAB.
 - Internal testing in Play Console.
 
 ### iOS
-- Generate native project on macOS/Xcode.
+- Generate native project in CI — covered.
+- Prepare location privacy usage descriptions — covered by CI preparation.
 - Configure bundle ID/signing.
-- Confirm location privacy usage descriptions.
 - Test native GPS on a real iPhone.
 - TestFlight validation.
 
@@ -67,7 +68,8 @@ This runbook is the release contract for the commercial launch planned for 23 Se
 2. Re-run advisors and critical smoke tests.
 3. Verify production web deployment.
 4. Run real-account Web smoke test.
-5. Complete signed Android/iOS verification available for the launch scope.
+5. Complete signed Android/iOS verification for the launch scope.
 6. Confirm billing path.
-7. Publish/announce the release.
-8. Keep rollback path and support contact available.
+7. Freeze and tag the release commit.
+8. Publish/announce the release.
+9. Keep rollback path and support contact available.
