@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, Award, CheckCircle2, CreditCard, FileUp, KeyRound, Link2, LockKeyhole, LogOut, Settings2, Shield, UsersRound, Clock3, UserRound, X } from 'lucide-react';
+import { Activity, AlertTriangle, Award, CheckCircle2, CreditCard, FileUp, Link2, LockKeyhole, LogOut, Settings2, Shield, UsersRound, Clock3, UserRound, X } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
@@ -24,6 +24,7 @@ import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
 import SecurityCenter from './security/SecurityCenter.jsx';
 import PrivacyCenter from './security/PrivacyCenter.jsx';
 import IntegrationsCenter from './integrations/IntegrationsCenter.jsx';
+import RulesCenter from './company/RulesCenter.jsx';
 import './styles.css';
 import './mobile.css';
 
@@ -113,6 +114,7 @@ function CommercialBridge() {
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('people360')} title="Ficha integrada de colaborador"><UsersRound size={16} /> People 360</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('performance')} title="Objetivos, avaliações e PDI"><Award size={16} /> Performance</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('setup')} title="Configurar organização"><Settings2 size={16} /> Setup</button>
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('rules')} title="Regras de operação"><Clock3 size={16} /> Regras</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('exceptions')} title="Fila unificada de exceções"><AlertTriangle size={16} /> Exceções</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('analytics')} title="Indicadores e tendências de pessoas"><Activity size={16} /> Analytics</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('integrations')} title="API e webhooks"><Link2 size={16} /> API</button>
@@ -136,6 +138,7 @@ function CommercialBridge() {
         {panel === 'people360' && canManageHr && <Employee360Panel profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'performance' && canManageHr && <PerformanceCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'setup' && canManageHr && <SetupWizard profile={profile} onClose={() => setPanel(null)} />}
+        {panel === 'rules' && canManageHr && <RulesCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'exceptions' && canManageHr && <ExceptionCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'analytics' && canManageHr && <PeopleAnalyticsCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'integrations' && canManageHr && <IntegrationsCenter profile={profile} onClose={() => setPanel(null)} />}
@@ -146,7 +149,7 @@ function CommercialBridge() {
         {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
         {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
         {panel === 'audit' && canManageHr && <AuditCenter profile={profile} onToast={notify} />}
-        {!['security','privacy','self-service','approvals','people360','performance','setup','exceptions','analytics','integrations','employee-import','lifecycle','billing','super-admin','employee-access','payroll','audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
+        {!['security','privacy','self-service','approvals','people360','performance','setup','rules','exceptions','analytics','integrations','employee-import','lifecycle','billing','super-admin','employee-access','payroll','audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
       </div></div>}
     </>
   );
