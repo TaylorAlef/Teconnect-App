@@ -23,5 +23,7 @@ jobs:
         run: npm run build
       - name: Branding guard
         run: npm run check:branding
+      - name: Globalization guard
+        run: npm run check:globalization
       - name: Mobile readiness guard
         run: npm run mobile:check
