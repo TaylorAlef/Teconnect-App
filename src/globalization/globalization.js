@@ -80,8 +80,8 @@ export function clearPreferences() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export function resolveGlobalPreferences(input = {}) {
-  const stored = getStoredPreferences();
+export function resolveGlobalPreferences(input = {}, options = {}) {
+  const stored = options.useStored === false ? {} : getStoredPreferences();
   const countryCode = String(input.countryCode || stored.countryCode || '').toUpperCase() || null;
   const countryDefaults = COUNTRY_DEFAULTS[countryCode] || {};
   const locale = normalizeLocale(input.locale) || normalizeLocale(stored.locale) || countryDefaults.locale || detectBrowserLocale();
@@ -147,8 +147,8 @@ export function getLocalePreferences(input = {}) {
   };
 }
 
-export function applyDocumentLocale(input = {}) {
-  const preferences = resolveGlobalPreferences(input);
+export function applyDocumentLocale(input = {}, options = {}) {
+  const preferences = resolveGlobalPreferences(input, options);
   if (typeof document !== 'undefined') {
     document.documentElement.lang = preferences.locale;
     document.documentElement.dir = 'ltr';
