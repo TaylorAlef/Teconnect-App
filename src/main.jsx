@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { CreditCard, Shield, Clock3, X, UserCog, WalletCards, History } from 'lucide-react';
+import { CheckCircle2, CreditCard, Shield, Clock3, X } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
@@ -8,6 +8,7 @@ import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import AttendanceWorkspace from './attendance/AttendanceWorkspace.jsx';
 import AuditCenter from './audit/AuditCenter.jsx';
 import EmployeeAccessManager from './commercial/EmployeeAccessManager.jsx';
+import ApprovalsCenter from './commercial/ApprovalsCenter.jsx';
 import PayrollControlCenter from './payroll/PayrollControlCenter.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
@@ -21,6 +22,7 @@ const supabase = createClient(
 );
 
 const ADMIN_HR_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
+const MANAGER_ROLES = new Set(['GESTOR', 'SUPERVISOR']);
 
 function CommercialBridge() {
   const [session, setSession] = useState(null);
@@ -43,7 +45,8 @@ function CommercialBridge() {
     const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
     setProfile(nextProfile || null);
     setNeedsOnboarding(!nextProfile?.company_id);
-    if (!nextProfile?.company_id || !ADMIN_HR_ROLES.has(nextProfile.role)) { setBilling(null); return; }
+    if (!nextProfile?.company_id || ![...ADMIN_HR_ROLES, ...MANAGER_ROLES].includes(nextProfile.role)) { setBilling(null); return; }
+    if (!ADMIN_HR_ROLES.has(nextProfile.role)) { setBilling(null); return; }
     const billingResult = await supabase.rpc('get_my_billing');
     setBilling(!billingResult.error ? (Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data) : null);
   }, []);
@@ -86,62 +89,37 @@ function CommercialBridge() {
   if (!profile) return null;
 
   const canManageHr = ADMIN_HR_ROLES.has(profile.role);
+  const canApprove = canManageHr || MANAGER_ROLES.has(profile.role);
   const openPanel = (type) => setPanel(type);
 
   return (
     <>
-      {isDemoMode ? (
-        <TeconnectSuite profile={profile} />
-      ) : (
-        <ProductionWorkspace
-          profile={profile}
-          billing={billing}
-          onOpenAttendance={openAttendance}
-          onOpenPanel={openPanel}
-          onOpenBilling={() => setPanel('billing')}
-        />
-      )}
-
+      {isDemoMode ? <TeconnectSuite profile={profile} /> : <ProductionWorkspace profile={profile} billing={billing} onOpenAttendance={openAttendance} onOpenPanel={openPanel} onOpenBilling={() => setPanel('billing')} />}
       {!isDemoMode && <EnterpriseCommandCenter profile={profile} billing={billing} />}
 
       <div className="tc-product-chrome">
-        <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real">
-          <Clock3 size={16} /> Ponto real
-        </button>
+        <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real"><Clock3 size={16} /> Ponto real</button>
+        {canApprove && <button type="button" className="tc-btn primary tc-billing-trigger" onClick={() => setPanel('approvals')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Férias, ausências e horas extra"><CheckCircle2 size={16} /> Aprovações</button>}
         {canManageHr && <>
           <EmployeeAccessManager profile={profile} onToast={notify} />
           <PayrollControlCenter profile={profile} onToast={notify} />
           <AuditCenter profile={profile} onToast={notify} />
-          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
-            <CreditCard size={16} /> Faturamento
-          </button>
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}><CreditCard size={16} /> Faturamento</button>
         </>}
         {profile.role === 'SUPER_ADMIN' && <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('super-admin')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}><Shield size={16} /> Super Admin</button>}
       </div>
 
-      {attendancePanel && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 110, overflow: 'auto', background: 'rgba(4,8,18,.94)', backdropFilter: 'blur(12px)', padding: '28px 26px 50px' }}>
-          <div style={{ maxWidth: 1380, margin: '0 auto' }}><div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}><button type="button" className="tc-btn" onClick={() => setAttendancePanel(false)}><X size={16} /> Fechar ponto</button></div><AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={notify} onReload={loadAttendanceContext} /></div>
-          {notice && <div className={`tc-pill ${notice.kind === 'error' ? 'tc-no' : 'tc-ok'}`} style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 130, padding: '12px 15px' }}>{notice.message}</div>}
-        </div>
-      )}
+      {attendancePanel && <div style={{ position: 'fixed', inset: 0, zIndex: 110, overflow: 'auto', background: 'rgba(4,8,18,.94)', backdropFilter: 'blur(12px)', padding: '28px 26px 50px' }}><div style={{ maxWidth: 1380, margin: '0 auto' }}><div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}><button type="button" className="tc-btn" onClick={() => setAttendancePanel(false)}><X size={16} /> Fechar ponto</button></div><AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={notify} onReload={loadAttendanceContext} /></div>{notice && <div className={`tc-pill ${notice.kind === 'error' ? 'tc-no' : 'tc-ok'}`} style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 130, padding: '12px 15px' }}>{notice.message}</div>}</div>}
 
-      {panel && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}>
-          <div style={{ maxWidth: 1320, margin: '0 auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
-              <div style={{ color: 'rgba(255,255,255,.58)', fontSize: 12, display: 'flex', gap: 8, alignItems: 'center' }}><Shield size={15} /> Área administrativa protegida</div>
-              <button type="button" className="tc-btn" onClick={() => setPanel(null)}><X size={16} /> Fechar</button>
-            </div>
-            {panel === 'billing' && canManageHr && <BillingPage />}
-            {panel === 'super-admin' && profile.role === 'SUPER_ADMIN' && <SuperAdminPage />}
-            {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
-            {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
-            {panel === 'audit' && canManageHr && <AuditCenter profile={profile} onToast={notify} />}
-            {!['billing', 'super-admin', 'employee-access', 'payroll', 'audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
-          </div>
-        </div>
-      )}
+      {panel && <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}><div style={{ maxWidth: 1320, margin: '0 auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}><div style={{ color: 'rgba(255,255,255,.58)', fontSize: 12, display: 'flex', gap: 8, alignItems: 'center' }}><Shield size={15} /> Área administrativa protegida</div><button type="button" className="tc-btn" onClick={() => setPanel(null)}><X size={16} /> Fechar</button></div>
+        {panel === 'approvals' && canApprove && <ApprovalsCenter profile={profile} onToast={notify} />}
+        {panel === 'billing' && canManageHr && <BillingPage />}
+        {panel === 'super-admin' && profile.role === 'SUPER_ADMIN' && <SuperAdminPage />}
+        {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
+        {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
+        {panel === 'audit' && canManageHr && <AuditCenter profile={profile} onToast={notify} />}
+        {!['approvals', 'billing', 'super-admin', 'employee-access', 'payroll', 'audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
+      </div></div>}
     </>
   );
 }
