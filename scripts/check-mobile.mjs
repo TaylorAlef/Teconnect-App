@@ -12,6 +12,7 @@ const required = [
 ];
 
 const missing = required.filter((name) => !packageJson.dependencies?.[name]);
+if (!packageJson.devDependencies?.typescript) missing.push('typescript');
 if (!fs.existsSync(configPath)) missing.push('capacitor.config.ts');
 
 if (missing.length) {
@@ -24,4 +25,4 @@ if (packageJson.scripts?.['mobile:sync'] !== 'npm run build && npx cap sync') {
   process.exit(1);
 }
 
-console.log('Mobile readiness check passed: Capacitor core, Android, iOS and sync workflow are configured.');
+console.log('Mobile readiness check passed: Capacitor core, Android, iOS, TypeScript and sync workflow are configured.');
