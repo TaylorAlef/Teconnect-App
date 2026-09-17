@@ -11,6 +11,8 @@
     "check:branding": "node scripts/check-branding.mjs",
     "check:globalization": "node scripts/check-globalization.mjs",
     "mobile:check": "node scripts/check-mobile.mjs",
+    "mobile:prepare:android": "node scripts/prepare-native-permissions.mjs android",
+    "mobile:prepare:ios": "node scripts/prepare-native-permissions.mjs ios",
     "mobile:sync": "npm run build && npx cap sync",
     "mobile:android": "npx cap open android",
     "mobile:ios": "npx cap open ios"
