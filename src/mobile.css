@@ -1,3 +1,5 @@
+@import './dock.css';
+
 @media (max-width: 1100px){
   .suite-app{grid-template-columns:220px 1fr!important}
   .suite-content{padding:22px 20px 48px!important}
