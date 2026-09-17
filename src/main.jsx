@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Award, CheckCircle2, CreditCard, Settings2, Shield, UsersRound, Clock3, X } from 'lucide-react';
+import { Activity, AlertTriangle, Award, CheckCircle2, CreditCard, Settings2, Shield, UsersRound, Clock3, UserRound, X } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
@@ -15,7 +15,10 @@ import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
 import Employee360Panel from './people/Employee360Panel.jsx';
 import PerformanceCenter from './people/PerformanceCenter.jsx';
+import SelfServicePanel from './people/SelfServicePanel.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
+import ExceptionCenter from './ops/ExceptionCenter.jsx';
+import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
 import './styles.css';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
@@ -97,11 +100,14 @@ function CommercialBridge() {
 
       <div className="tc-product-chrome">
         <button type="button" className="tc-btn primary tc-billing-trigger" onClick={openAttendance} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Abrir ponto e geofence real"><Clock3 size={16} /> Ponto real</button>
+        {profile.role !== 'SUPER_ADMIN' && <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('self-service')} title="Área pessoal do colaborador"><UserRound size={16} /> Meu RH</button>}
         {canApprove && <button type="button" className="tc-btn primary tc-billing-trigger" onClick={() => setPanel('approvals')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }} title="Férias, ausências e horas extra"><CheckCircle2 size={16} /> Aprovações</button>}
         {canManageHr && <>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('people360')} title="Ficha integrada de colaborador"><UsersRound size={16} /> People 360</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('performance')} title="Objetivos, avaliações e PDI"><Award size={16} /> Performance</button>
           <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('setup')} title="Configurar organização"><Settings2 size={16} /> Setup</button>
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('exceptions')} title="Fila unificada de exceções"><AlertTriangle size={16} /> Exceções</button>
+          <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('analytics')} title="Indicadores e tendências de pessoas"><Activity size={16} /> Analytics</button>
           <EmployeeAccessManager profile={profile} onToast={notify} />
           <PayrollControlCenter profile={profile} onToast={notify} />
           <AuditCenter profile={profile} onToast={notify} />
@@ -113,16 +119,19 @@ function CommercialBridge() {
       {attendancePanel && <div style={{ position: 'fixed', inset: 0, zIndex: 110, overflow: 'auto', background: 'rgba(4,8,18,.94)', backdropFilter: 'blur(12px)', padding: '28px 26px 50px' }}><div style={{ maxWidth: 1380, margin: '0 auto' }}><div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 14 }}><button type="button" className="tc-btn" onClick={() => setAttendancePanel(false)}><X size={16} /> Fechar ponto</button></div><AttendanceWorkspace profile={profile} locations={attendanceLocations} anomalies={attendanceAnomalies} notify={notify} onReload={loadAttendanceContext} /></div>{notice && <div className={`tc-pill ${notice.kind === 'error' ? 'tc-no' : 'tc-ok'}`} style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 130, padding: '12px 15px' }}>{notice.message}</div>}</div>}
 
       {panel && <div style={{ position: 'fixed', inset: 0, zIndex: 100, overflow: 'auto', background: 'var(--tc-bg, #0b1020)', padding: '26px 28px 44px' }}><div style={{ maxWidth: 1400, margin: '0 auto' }}><div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}><div style={{ color: 'rgba(255,255,255,.58)', fontSize: 12, display: 'flex', gap: 8, alignItems: 'center' }}><Shield size={15} /> Área protegida · tenant {profile.company_id}</div><button type="button" className="tc-btn" onClick={() => setPanel(null)}><X size={16} /> Fechar</button></div>
+        {panel === 'self-service' && profile.role !== 'SUPER_ADMIN' && <SelfServicePanel profile={profile} onClose={() => setPanel(null)} onOpenAttendance={openAttendance} />}
         {panel === 'approvals' && canApprove && <ApprovalsCenter profile={profile} onToast={notify} />}
         {panel === 'people360' && canManageHr && <Employee360Panel profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'performance' && canManageHr && <PerformanceCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'setup' && canManageHr && <SetupWizard profile={profile} onClose={() => setPanel(null)} />}
+        {panel === 'exceptions' && canManageHr && <ExceptionCenter profile={profile} onClose={() => setPanel(null)} />}
+        {panel === 'analytics' && canManageHr && <PeopleAnalyticsCenter profile={profile} onClose={() => setPanel(null)} />}
         {panel === 'billing' && canManageHr && <BillingPage />}
         {panel === 'super-admin' && profile.role === 'SUPER_ADMIN' && <SuperAdminPage />}
         {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
         {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
         {panel === 'audit' && canManageHr && <AuditCenter profile={profile} onToast={notify} />}
-        {!['approvals', 'people360', 'performance', 'setup', 'billing', 'super-admin', 'employee-access', 'payroll', 'audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
+        {!['self-service','approvals','people360','performance','setup','exceptions','analytics','billing','super-admin','employee-access','payroll','audit'].includes(panel) && <div style={{ padding: 32, textAlign: 'center' }}>Área disponível no centro administrativo.</div>}
       </div></div>}
     </>
   );
