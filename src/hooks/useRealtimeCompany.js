@@ -29,6 +29,7 @@ function publishStatus(status) {
 export function useRealtimeCompany(supabase, companyId, onChange) {
   const callbackRef = useRef(onChange);
   const refreshTimerRef = useRef(null);
+  const pendingRef = useRef(null);
   const [status, setStatus] = useState('DISCONNECTED');
 
   useEffect(() => { callbackRef.current = onChange; }, [onChange]);
@@ -40,7 +41,16 @@ export function useRealtimeCompany(supabase, companyId, onChange) {
     }
 
     const channel = supabase.channel(`teconnect-company-${companyId}`);
-    const emit = (table, payload) => callbackRef.current?.({ table, payload });
+    const emit = (table, payload) => {
+      pendingRef.current = { table, payload };
+      if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = window.setTimeout(() => {
+        refreshTimerRef.current = null;
+        const pending = pendingRef.current;
+        pendingRef.current = null;
+        callbackRef.current?.(pending);
+      }, 350);
+    };
 
     TABLES.forEach((table) => {
       channel.on(
@@ -57,22 +67,15 @@ export function useRealtimeCompany(supabase, companyId, onChange) {
 
     return () => {
       if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+      pendingRef.current = null;
       supabase.removeChannel(channel);
       setStatus('DISCONNECTED');
       publishStatus('DISCONNECTED');
     };
   }, [supabase, companyId]);
 
-  const scheduleRefresh = (refresh) => {
-    if (!refresh) return;
-    if (refreshTimerRef.current) window.clearTimeout(refreshTimerRef.current);
-    refreshTimerRef.current = window.setTimeout(() => {
-      refreshTimerRef.current = null;
-      refresh();
-    }, 350);
-  };
-
-  return { status, scheduleRefresh, realtimeTables: TABLES };
+  return { status };
 }
 
 export const realtimeTables = TABLES;
