@@ -3,6 +3,7 @@ import { CreditCard, LockKeyhole, Shield } from 'lucide-react';
 import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
+import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
@@ -95,6 +96,7 @@ function CommercialBridge() {
   return (
     <>
       <TeconnectSuite profile={profile} />
+      <EnterpriseCommandCenter profile={profile} billing={billing} />
       <div className="tc-product-chrome">
         <button type="button" className="tc-btn ghost tc-billing-trigger" onClick={() => setPanel('billing')} style={{ display: 'inline-flex', alignItems: 'center', gap: 7, boxShadow: '0 10px 28px rgba(0,0,0,.18)' }}>
           <CreditCard size={16} /> Faturamento
