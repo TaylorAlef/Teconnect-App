@@ -1,0 +1,107 @@
+/* Te-connect — Centro de operações
+   Apenas organiza e reduz a densidade visual do menu de operações.
+   Não altera funcionalidades nem remove acessos. */
+
+.tc-dock-more-panel{
+  width:min(860px,calc(100vw - 36px));
+  padding:18px;
+  border-radius:20px;
+}
+
+.tc-dock-more-head{
+  margin-bottom:14px;
+  padding:2px 3px 4px;
+}
+
+.tc-dock-more-head strong{
+  font-size:16px;
+}
+
+.tc-dock-menu-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:8px;
+}
+
+.tc-dock-menu-grid button{
+  min-height:56px;
+  padding:10px 11px;
+  align-items:center;
+  gap:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,.028);
+}
+
+.tc-dock-menu-grid button:hover{
+  background:rgba(255,255,255,.065);
+}
+
+:root[data-theme=light] .tc-dock-menu-grid button{
+  background:rgba(16,25,45,.018);
+}
+
+:root[data-theme=light] .tc-dock-menu-grid button:hover{
+  background:rgba(16,25,45,.05);
+}
+
+.tc-dock-menu-grid button>svg{
+  width:18px;
+  height:18px;
+  margin-top:0;
+}
+
+.tc-dock-menu-grid button span{
+  display:block;
+  min-width:0;
+}
+
+.tc-dock-menu-grid button strong{
+  display:block;
+  font-size:10px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* The detail copy is available in the code, but is intentionally hidden
+   from the primary operations surface to keep the menu readable. */
+.tc-dock-menu-grid button small{
+  display:none!important;
+}
+
+/* Make high-use operational areas visually easier to scan without
+   changing the underlying action or permission model. */
+.tc-dock-menu-grid button:nth-child(3),
+.tc-dock-menu-grid button:nth-child(4),
+.tc-dock-menu-grid button:nth-child(5),
+.tc-dock-menu-grid button:nth-child(6){
+  background:rgba(124,140,255,.045);
+}
+
+.tc-dock-menu-grid button:nth-child(13),
+.tc-dock-menu-grid button:nth-child(14),
+.tc-dock-menu-grid button:nth-child(15),
+.tc-dock-menu-grid button:nth-child(16),
+.tc-dock-menu-grid button:nth-child(17){
+  opacity:.92;
+}
+
+@media (max-width:1100px){
+  .tc-dock-more-panel{width:min(760px,calc(100vw - 30px));}
+  .tc-dock-menu-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+
+@media (max-width:700px){
+  .tc-dock-more-panel{width:calc(100vw - 20px);padding:13px;}
+  .tc-dock-more-head{margin-bottom:10px;}
+  .tc-dock-more-head strong{font-size:14px;}
+  .tc-dock-menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;}
+  .tc-dock-menu-grid button{min-height:52px;padding:9px;}
+  .tc-dock-menu-grid button strong{font-size:9px;}
+}
+
+@media (max-width:390px){
+  .tc-dock-more-panel{padding:10px;}
+  .tc-dock-menu-grid{grid-template-columns:1fr 1fr;}
+  .tc-dock-menu-grid button{min-height:48px;}
+}
