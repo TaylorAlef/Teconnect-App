@@ -1,0 +1,22 @@
+/* Floating dock layout safety and accessibility polish. */
+.content{padding-bottom:116px!important}
+.suite-content{padding-bottom:112px!important}
+
+.tc-dock-item:focus-visible,
+.tc-dock-menu-grid button:focus-visible{
+  outline:2px solid rgba(124,140,255,.72);
+  outline-offset:2px;
+}
+
+@media (max-width:640px){
+  .content{padding-bottom:112px!important}
+  .suite-content{padding-bottom:112px!important}
+  .tc-product-chrome{padding-bottom:env(safe-area-inset-bottom,0px)!important}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .tc-dock-item,
+  .tc-dock-chevron,
+  .tc-dock-menu-grid button,
+  .tc-dock-more-panel{transition:none!important;animation:none!important}
+}
