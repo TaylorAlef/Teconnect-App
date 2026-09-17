@@ -3,3 +3,36 @@
 .tc-brand>div:not(.tc-brand-mark){display:none!important}
 .tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:228px!important;height:54px!important;border-radius:0!important;display:block!important;flex:0 0 auto!important;background:transparent url('/teconnect-logo.svg') center/contain no-repeat!important;border:0!important;box-shadow:none!important;font-size:0!important;color:transparent!important}
 @media(max-width:720px){.tc-brand .tc-brand-mark,.tc-shell .tc-side .tc-brand .tc-brand-mark{width:196px!important;height:48px!important}}
+
+/* Official wordmark in the floating product dock. */
+.tc-dock-logo{
+  width:126px!important;
+  height:34px!important;
+  border-radius:9px!important;
+  background:#fff url('/teconnect-logo.svg') center/112px auto no-repeat!important;
+  border:1px solid rgba(8,31,72,.10)!important;
+  box-shadow:0 8px 22px rgba(7,22,48,.18)!important;
+  color:transparent!important;
+  font-size:0!important;
+}
+.tc-dock-identity{min-width:176px!important}
+.tc-dock-identity-copy strong{display:none!important}
+.tc-dock-identity-copy span{max-width:118px!important;font-size:9px!important;font-weight:700!important}
+
+/* Make the permanent sidebar brand readable on the dark navigation background. */
+.tc-shell .tc-side .tc-brand .tc-brand-mark,
+.suite-app .suite-sidebar .suite-brand-wrap .tc-brand-mark{
+  border-radius:12px!important;
+  background-color:#fff!important;
+  background-size:90% auto!important;
+  box-shadow:0 8px 26px rgba(0,0,0,.16)!important;
+}
+
+@media(max-width:900px){
+  .tc-dock-logo{width:108px!important;height:32px!important;background-size:96px auto!important}
+  .tc-dock-identity{min-width:118px!important}
+}
+@media(max-width:640px){
+  .tc-dock-logo{width:96px!important;height:29px!important;background-size:86px auto!important}
+  .tc-dock-identity{min-width:100px!important}
+}
