@@ -56,6 +56,14 @@ jobs:
           fi
       - name: Verify Android location permissions
         run: npm run mobile:prepare:android
+      - name: Verify Android location permissions in manifest
+        run: |
+          set -euo pipefail
+          manifest="android/app/src/main/AndroidManifest.xml"
+          test -f "$manifest"
+          grep -q 'android.permission.ACCESS_COARSE_LOCATION' "$manifest"
+          grep -q 'android.permission.ACCESS_FINE_LOCATION' "$manifest"
+          echo "Android app manifest contains both location permissions."
       - name: Build Android debug APK
         run: ./gradlew assembleDebug --no-daemon
         working-directory: android
