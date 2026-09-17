@@ -42,16 +42,32 @@ function patchAndroidManifest() {
 
   for (const permission of requiredPermissions) {
     if (xml.includes(`android:name=\"${permission}\"`)) continue;
+
     const entry = `    <uses-permission android:name=\"${permission}\" />\n`;
-    const marker = '    <application';
-    if (!xml.includes(marker)) throw new Error('AndroidManifest.xml structure is not compatible with permission patching.');
-    xml = xml.replace(marker, `${entry}${marker}`);
+    const applicationTag = /(^|\n)([ \t]*)<application\b/m;
+    if (!applicationTag.test(xml)) {
+      throw new Error('AndroidManifest.xml does not contain an <application> tag for permission insertion.');
+    }
+
+    xml = xml.replace(applicationTag, (match, lineStart, indent) => `${lineStart}${entry}${indent}<application`);
   }
 
   fs.writeFileSync(manifestPath, xml);
-  const missing = requiredPermissions.filter((permission) => !xml.includes(`android:name=\"${permission}\"`));
-  if (missing.length) throw new Error(`Android location permissions missing after patch: ${missing.join(', ')}`);
-  console.log('Android location permissions prepared.');
+
+  const missing = requiredPermissions.filter(
+    (permission) => !xml.includes(`android:name=\"${permission}\"`),
+  );
+
+  if (missing.length) {
+    throw new Error(
+      `Android location permissions missing after patch: ${missing.join(', ')}. Manifest: ${manifestPath}`,
+    );
+  }
+
+  console.log(`Android location permissions prepared in ${manifestPath}.`);
+  for (const permission of requiredPermissions) {
+    console.log(`Verified: ${permission}`);
+  }
 }
 
 const platform = process.argv[2];
