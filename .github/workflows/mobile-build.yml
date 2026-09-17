@@ -40,6 +40,20 @@ jobs:
         run: npx cap add android
       - name: Sync Capacitor Android
         run: npx cap sync android
+      - name: Verify Android target API
+        run: |
+          set -euo pipefail
+          matches="$(grep -RhoE 'targetSdk(Version)?[[:space:]]*(=|:)?[[:space:]]*[0-9]+' android 2>/dev/null || true)"
+          target_sdk="$(printf '%s\n' "$matches" | grep -oE '[0-9]+$' | sort -nr | head -1 || true)"
+          if [ -z "$target_sdk" ]; then
+            echo "ERROR: Could not determine Android target SDK from generated project."
+            exit 1
+          fi
+          echo "Detected Android target SDK: $target_sdk"
+          if [ "$target_sdk" -lt 36 ]; then
+            echo "ERROR: Google Play launch requires target API 36+ for new apps/updates."
+            exit 1
+          fi
       - name: Verify Android location permissions
         run: npm run mobile:prepare:android
       - name: Build Android debug APK
