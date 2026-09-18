@@ -36,6 +36,7 @@ declare
   v_segment_end timestamptz;
   v_segment_minutes integer;
   v_overlap integer;
+  v_status text := 'PRESENT';
   r record;
 begin
   select e.company_id
