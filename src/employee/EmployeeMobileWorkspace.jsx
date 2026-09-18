@@ -5,6 +5,7 @@ import { createClient } from '@supabase/supabase-js';
 import { getNativeCurrentPosition } from '../lib/native-geofence';
 import { haversineDistanceMeters } from '../lib/geofence';
 import '../teconnect.css';
+import './employee.css';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
