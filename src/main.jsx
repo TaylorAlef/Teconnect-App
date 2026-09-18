@@ -51,9 +51,21 @@ import RoleCenter from './security/RoleCenter.jsx';
 import './styles.css';
 import './mobile.css';
 
-const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
-  auth: { persistSession: true, autoRefreshToken: true },
-});
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+let supabase = null;
+let supabaseInitError = null;
+
+try {
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('Configuração do Supabase não encontrada no aplicativo.');
+  supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { persistSession: true, autoRefreshToken: true },
+  });
+} catch (error) {
+  supabaseInitError = error;
+}
+
+
 const ADMIN_HR_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
 const MANAGER_ROLES = new Set(['GESTOR', 'SUPERVISOR']);
 const roleLabels = {
@@ -64,6 +76,69 @@ const roleLabels = {
   SUPERVISOR: 'Supervisor',
   EMPLOYEE: 'Colaborador',
 };
+
+function StartupError({ error }) {
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ width: '100%', maxWidth: 460, padding: 28, borderRadius: 20, border: '1px solid rgba(255,255,255,.1)', background: '#0d1728', boxShadow: '0 20px 60px rgba(0,0,0,.35)' }}>
+        <div style={{ width: 44, height: 44, borderRadius: 12, display: 'grid', placeItems: 'center', background: '#15263f', marginBottom: 18, fontWeight: 800 }}>T</div>
+        <h1 style={{ margin: 0, fontSize: 24 }}>Te-connect</h1>
+        <p style={{ color: 'rgba(255,255,255,.65)', lineHeight: 1.6, margin: '10px 0 18px' }}>O aplicativo não conseguiu inicializar. Verifique a configuração e abra novamente.</p>
+        <div style={{ padding: 12, borderRadius: 10, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', color: '#fecaca', fontSize: 13 }}>
+          {error?.message || 'Erro de inicialização.'}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NativeLogin({ onSuccess }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (event) => {
+    event.preventDefault();
+    if (!supabase) return;
+    setBusy(true);
+    setError('');
+    try {
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      if (authError) throw authError;
+      onSuccess(data.session || null);
+    } catch (loginError) {
+      setError(loginError?.message || 'Não foi possível iniciar sessão.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px 18px calc(24px + env(safe-area-inset-bottom))', background: 'radial-gradient(circle at 50% 0%, rgba(59,130,246,.14), transparent 42%), #07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ width: '100%', maxWidth: 430, padding: 26, borderRadius: 22, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(13,23,40,.96)', boxShadow: '0 24px 70px rgba(0,0,0,.4)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, display: 'grid', placeItems: 'center', background: '#15263f', fontWeight: 800, fontSize: 20 }}>T</div>
+          <div><strong style={{ display: 'block', fontSize: 18 }}>Te-connect</strong><span style={{ color: 'rgba(255,255,255,.55)', fontSize: 12 }}>People OS</span></div>
+        </div>
+        <h1 style={{ margin: 0, fontSize: 25 }}>Acesso corporativo</h1>
+        <p style={{ color: 'rgba(255,255,255,.62)', lineHeight: 1.55, margin: '10px 0 22px' }}>Entre para gerir pessoas, ponto, turnos e operações de RH.</p>
+        {error && <div style={{ marginBottom: 14, padding: 11, borderRadius: 10, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', color: '#fecaca', fontSize: 13 }}>{error}</div>}
+        <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
+          <label style={{ display: 'grid', gap: 7, color: 'rgba(255,255,255,.72)', fontSize: 13 }}>
+            Email
+            <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.12)', background: '#091423', color: '#fff', outline: 'none' }} />
+          </label>
+          <label style={{ display: 'grid', gap: 7, color: 'rgba(255,255,255,.72)', fontSize: 13 }}>
+            Palavra-passe
+            <input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.12)', background: '#091423', color: '#fff', outline: 'none' }} />
+          </label>
+          <button type="submit" disabled={busy} style={{ marginTop: 4, border: 0, borderRadius: 11, padding: '13px 16px', background: '#2563eb', color: '#fff', fontWeight: 700, opacity: busy ? .65 : 1 }}>{busy ? 'A entrar…' : 'Entrar'}</button>
+        </form>
+      </div>
+    </div>
+  );
+}
 
 function CommercialBridge() {
   const [session, setSession] = useState(null);
@@ -76,6 +151,7 @@ function CommercialBridge() {
   const [notice, setNotice] = useState(null);
   const [attendanceLocations, setAttendanceLocations] = useState([]);
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
+  const [authLoading, setAuthLoading] = useState(true);
   const isDemoMode = useMemo(() => new URLSearchParams(window.location.search).get('demo') === '1', []);
 
   const loadCommercial = useCallback(async (activeSession) => {
@@ -129,11 +205,16 @@ function CommercialBridge() {
   }, [profile?.company_id]);
 
   useEffect(() => {
+    if (!supabase) {
+      setAuthLoading(false);
+      return undefined;
+    }
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
       setSession(data.session || null);
       loadCommercial(data.session || null).catch(console.error);
+      setAuthLoading(false);
     });
     const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession || null);
@@ -166,7 +247,13 @@ function CommercialBridge() {
     setAttendancePanel(false);
     setPanel(null);
   };
-  if (!session) return null;
+  if (supabaseInitError) return <StartupError error={supabaseInitError} />;
+  if (authLoading) return (
+    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <div style={{ textAlign: 'center' }}><div className="tc-brand-mark" style={{ margin: '0 auto 12px' }}>T</div><strong>A iniciar o Te-connect…</strong></div>
+    </div>
+  );
+  if (!session) return <NativeLogin onSuccess={(nextSession) => setSession(nextSession)} />;
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
   if (!profile) return null;
 
