@@ -1,0 +1,38 @@
+name: Export Source Package
+
+on:
+  push:
+    paths:
+      - ".github/workflows/export-source.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout exact source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build clean source ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf /tmp/teconnect-src /tmp/teconnect-export.zip /tmp/teconnect-source.zip
+          mkdir -p /tmp/teconnect-src
+          git archive --format=tar "$GITHUB_SHA" | tar -x -C /tmp/teconnect-src
+          rm -f /tmp/teconnect-src/.env.production
+          rm -f /tmp/teconnect-src/.DS_Store
+          cd /tmp/teconnect-src
+          zip -qr /tmp/teconnect-source.zip .
+
+      - name: Upload source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: teconnect-source-package
+          path: /tmp/teconnect-source.zip
+          retention-days: 14
