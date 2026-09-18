@@ -99,8 +99,6 @@ export default function EmployeeMobileWorkspace({ profile }) {
         .select('id,event_type,occurred_at,gps_accuracy,validation_status')
         .eq('company_id', profile.company_id)
         .eq('employee_id', clock.employee.id)
-        .gte('occurred_at', bounds.start + 'T00:00:00+00:00')
-        .lt('occurred_at', bounds.endExclusive + 'T00:00:00+00:00')
         .eq('validation_status', 'VALID')
         .order('occurred_at', { ascending: false })
         .limit(500),
@@ -108,7 +106,11 @@ export default function EmployeeMobileWorkspace({ profile }) {
     if (dayResult.error) throw dayResult.error;
     if (entryResult.error) throw entryResult.error;
     setDays(dayResult.data || []);
-    setEntries(entryResult.data || []);
+    const periodEntries = (entryResult.data || []).filter((entry) => {
+      const key = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit' }).format(new Date(entry.occurred_at));
+      return key === period;
+    });
+    setEntries(periodEntries);
   };
 
   useEffect(() => {
@@ -285,7 +287,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
       {tab === 'period' && <div className="te-employee-stack">
         <section className="te-employee-hero"><div><span>Histórico de assiduidade</span><h1>{monthLabel}</h1><p>Veja tudo o que já foi contabilizado no período.</p></div><input className="te-month-input" type="month" value={period} onChange={(e) => setPeriod(e.target.value)} /></section>
         <section className="te-employee-metrics">
-          <div><span>Total trabalhado</span><strong>{fmtMinutes(totals.worked)}</strong></div>
+          <div><span>Total trabalhado</span><strong>{fmtMinutes(totals.worked + (period === new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit' }).format(new Date()) && state === 'WORKING' ? sessionMinutes : 0))}</strong></div>
           <div><span>Horas extra</span><strong>{fmtMinutes(totals.overtime)}</strong></div>
           <div><span>Atrasos</span><strong>{totals.late} min</strong></div>
           <div><span>Dias com presença</span><strong>{totals.days}</strong></div>
