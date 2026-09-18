@@ -52,8 +52,73 @@ jobs:
         run: |
           set -euo pipefail
           matches="$(grep -RhoE 'targetSdk(Version)?[[:space:]]*(=|:)?[[:space:]]*[0-9]+' android 2>/dev/null || true)"
-          target_sdk="$(printf '%s
-' "$matches" | grep -oE '[0-9]+$' | sort -nr | head -1 || true)"
+          target_sdk="$(printf '%s' "$matches" | grep -oE '[0-9]+
+          if [ -z "$target_sdk" ]; then
+            echo "ERROR: Could not determine Android target SDK from generated project."
+            exit 1
+          fi
+          echo "Detected Android target SDK: $target_sdk"
+          if [ "$target_sdk" -lt 36 ]; then
+            echo "ERROR: Google Play launch requires target API 36+ for new apps/updates."
+            exit 1
+          fi
+      - name: Verify Android location permissions
+        run: npm run mobile:prepare:android
+      - name: Verify Android location permissions in manifest
+        run: |
+          set -euo pipefail
+          manifest="android/app/src/main/AndroidManifest.xml"
+          test -f "$manifest"
+          grep -q 'android.permission.ACCESS_COARSE_LOCATION' "$manifest"
+          grep -q 'android.permission.ACCESS_FINE_LOCATION' "$manifest"
+          echo "Android app manifest contains both location permissions."
+      - name: Build Android debug APK
+        run: ./gradlew assembleDebug --no-daemon
+        working-directory: android
+      - name: Upload Android debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: teconnect-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+
+  ios:
+    runs-on: macos-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build web bundle
+        run: npm run build
+      - name: Verify Supabase runtime config in mobile bundle
+        run: |
+          set -euo pipefail
+          test -s .env.production
+          grep -R -q 'kegmysndcrytlsuclhsq.supabase.co' dist
+          grep -R -q 'sb_publishable_' dist
+          echo "Supabase runtime configuration is embedded in the mobile bundle."
+      - name: Generate iOS project
+        run: npx cap add ios
+      - name: Sync Capacitor iOS
+        run: npx cap sync ios
+      - name: Prepare iOS location permissions
+        run: npm run mobile:prepare:ios
+      - name: Build iOS simulator target
+        run: >-
+          xcodebuild
+          -project ios/App/App.xcodeproj
+          -scheme App
+          -sdk iphonesimulator
+          -configuration Debug
+          -destination 'generic/platform=iOS Simulator'
+          CODE_SIGNING_ALLOWED=NO
+          build
+ | sort -nr | head -1 || true)"
           if [ -z "$target_sdk" ]; then
             echo "ERROR: Could not determine Android target SDK from generated project."
             exit 1
