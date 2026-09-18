@@ -294,7 +294,11 @@ export default function EmployeeMobileWorkspace({ profile }) {
         </section>
         <section className="te-card te-period-card">
           <div className="te-card-head"><div><span className="te-overline">Resumo diário</span><h2>Período</h2></div><CalendarDays size={18} /></div>
-          {days.length === 0 ? <div className="te-empty-inline">Não existem registos calculados neste período.</div> : days.map((day) => <div className="te-day-item" key={day.work_date}><div><strong>{fmtDate(day.work_date)}</strong><small>{String(day.status || '').replace('_', ' ')}</small></div><div><span>{fmtTime(day.first_clock_in)} → {fmtTime(day.last_clock_out)}</span><strong>{fmtMinutes(day.worked_minutes)}</strong></div><div><span>Extra</span><strong>{fmtMinutes(day.overtime_minutes)}</strong></div><div><span>Atraso</span><strong>{Number(day.late_minutes || 0)} min</strong></div></div>)}
+          {days.length === 0 ? <div className="te-empty-inline">Não existem registos calculados neste período.</div> : days.map((day) => {
+          const isToday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date()) === day.work_date;
+          const liveWorked = Number(day.worked_minutes || 0) + (isToday && state === 'WORKING' ? sessionMinutes : 0);
+          return <div className="te-day-item" key={day.work_date}><div><strong>{fmtDate(day.work_date)}</strong><small>{String(day.status || '').replace('_', ' ')}</small></div><div><span>{fmtTime(day.first_clock_in)} → {fmtTime(day.last_clock_out)}</span><strong>{fmtMinutes(liveWorked)}</strong></div><div><span>Extra</span><strong>{fmtMinutes(day.overtime_minutes)}</strong></div><div><span>Atraso</span><strong>{Number(day.late_minutes || 0)} min</strong></div></div>;
+        })}
         </section>
         <section className="te-card te-period-card">
           <div className="te-card-head"><div><span className="te-overline">Linha do tempo</span><h2>Marcações</h2></div><Clock3 size={18} /></div>
