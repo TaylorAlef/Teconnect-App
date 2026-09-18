@@ -40,6 +40,7 @@ import SelfServicePanel from './people/SelfServicePanel.jsx';
 import EmployeeRequestCenter from './people/EmployeeRequestCenter.jsx';
 import EmployeeImportPanel from './people/EmployeeImportPanel.jsx';
 import LifecycleCenter from './people/LifecycleCenter.jsx';
+import EmployeeMobileWorkspace from './employee/EmployeeMobileWorkspace.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
 import ExceptionCenter from './ops/ExceptionCenter.jsx';
 import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
@@ -248,6 +249,7 @@ function CommercialBridge() {
     setPanel(null);
   };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
+  if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
       <div style={{ textAlign: 'center' }}><div className="tc-brand-mark" style={{ margin: '0 auto 12px' }}>T</div><strong>A iniciar o Te-connect…</strong></div>
