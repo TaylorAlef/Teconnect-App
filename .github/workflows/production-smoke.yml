@@ -43,6 +43,17 @@ jobs:
           printf '%s' "$manifest" | grep -q 'People OS'
           echo "Production manifest smoke check passed."
 
+      - name: Check launch infrastructure endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          for asset in /robots.txt /sitemap.xml /og-image.svg /privacy.html /terms.html /404.html; do
+            status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /dev/null -w '%{http_code}' "https://app.te-connect.com${asset}")"
+            echo "$asset -> $status"
+            test "$status" -ge 200
+            test "$status" -lt 400
+          done
+          echo "Production launch infrastructure smoke check passed."
       - name: Check public branding assets
         shell: bash
         run: |
