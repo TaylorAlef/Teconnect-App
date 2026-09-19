@@ -36,6 +36,7 @@ const required = [
   'supabase/functions/stripe-webhook/index.ts',
   'supabase/functions/teconnect-api/index.ts',
   'supabase/functions/integration-worker/index.ts',
+  'supabase/functions/teconnect-webhook-deliver/index.ts',
   'supabase/migrations/20260919211500_v202_profile_rls_helper_grant.sql',
   'supabase/migrations/20260919220000_v203_client_rpc_and_rls_access_restore.sql',
   'supabase/migrations/20260919221000_v204_clock_event_timestamp_hardening.sql',
