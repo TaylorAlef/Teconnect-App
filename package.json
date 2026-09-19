@@ -16,7 +16,8 @@
     "mobile:sync": "npm run mobile:prepare:android && npm run build && npx cap sync",
     "mobile:android": "npx cap open android",
     "mobile:ios": "npx cap open ios",
-    "check:web-launch": "node scripts/check-web-launch.mjs"
+    "check:web-launch": "node scripts/check-web-launch.mjs",
+    "check:saas-contract": "node scripts/check-saas-contract.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
