@@ -422,19 +422,94 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
   </div>;
 }
 
+
 function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacations, pendingOvertime, openTasks, openAlerts, expiringDocs, failedIntegrations, employeeMap, onNavigate, onOpenAttendance, onRefresh }) {
-  const attendanceRate = liveEmployees.length ? (presentToday.length / liveEmployees.length) * 100 : 0;
+  const activeCount = liveEmployees.length;
+  const attendanceRate = activeCount ? (presentToday.length / activeCount) * 100 : 0;
   const overtimeWeek = state.attendance.filter((item) => new Date(item.work_date) >= new Date(Date.now() - 7 * 86400000)).reduce((sum, item) => sum + Number(item.overtime_minutes || 0), 0);
-  const nightWeek = state.attendance.filter((item) => new Date(item.work_date) >= new Date(Date.now() - 7 * 86400000)).reduce((sum, item) => sum + Number(item.night_minutes || 0), 0);
+  const dayKeys = Array.from({ length: 7 }, (_, index) => {
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() - (6-index));
+    return d.toISOString().slice(0,10);
+  });
+  const presenceSeries = dayKeys.map((key) => {
+    const records = state.attendance.filter((item) => item.work_date === key);
+    const present = records.filter((item) => !['ABSENT','NOT_SCHEDULED'].includes(String(item.status).toUpperCase())).length;
+    return { key, label: new Intl.DateTimeFormat('pt-PT',{weekday:'short'}).format(new Date(key+'T12:00:00')).replace('.',''), value: activeCount ? Math.min(100, (present/activeCount)*100) : 0 };
+  });
+  const highlights = liveEmployees.slice(0, 5).map((employee) => {
+    const latest = state.attendance.find((row) => row.employee_id === employee.id);
+    const status = String(latest?.status || '').toUpperCase();
+    return { employee, label: status === 'ABSENT' ? 'Ausente' : status === 'NOT_SCHEDULED' ? 'Fora da escala' : 'Em atividade', tone: status === 'ABSENT' ? 'muted' : 'positive' };
+  });
+  const upcoming = [
+    ...state.interviews.filter((item) => item.scheduled_at && new Date(item.scheduled_at) >= new Date()).slice(0,3).map((item) => ({
+      icon: Users, title: 'Entrevista', subtitle: item.candidate_id ? 'Candidato em processo' : 'Entrevista RH', when: new Intl.DateTimeFormat('pt-PT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}).format(new Date(item.scheduled_at))
+    })),
+    ...state.vacations.filter((item) => item.start_date && new Date(item.start_date+'T00:00:00') >= new Date()).slice(0,2).map((item) => ({
+      icon: CalendarCheck, title: 'Férias', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: date(item.start_date)
+    })),
+  ].slice(0,4);
+  const alertItems = [
+    ...openAlerts.slice(0,3).map((alert) => ({ icon: AlertTriangle, tone: 'danger', title: employeeMap.get(alert.employee_id)?.full_name || alert.title, subtitle: alert.message, when: date(alert.created_at) })),
+    ...pendingVacations.slice(0,2).map((item) => ({ icon: CalendarCheck, tone: 'warning', title: 'Pedido de férias', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: date(item.start_date) })),
+    ...pendingOvertime.slice(0,1).map((item) => ({ icon: Clock3, tone: 'warning', title: 'Horas extra por aprovar', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: minutes(item.minutes) })),
+  ].slice(0,4);
+
   return <>
-    <div className="suite-hero-grid"><div className="suite-hero-card"><div className="suite-eyebrow"><Sparkles size={14} /> Executive People Command</div><h1>O RH trabalha com dados reais e ações no mesmo fluxo.</h1><p>Headcount, assiduidade, férias, documentos, alertas, tarefas, folha e integrações ligados ao tenant da empresa.</p><div className="suite-actions"><Button variant="primary" icon={RefreshCw} onClick={onRefresh}>Sincronizar</Button><Button icon={Clock3} onClick={onOpenAttendance}>Abrir ponto real</Button><Button icon={Users} onClick={() => onNavigate('people')}>Colaboradores</Button></div></div><div className="suite-hero-side"><div className="suite-hero-side-top"><div><span className="suite-kicker">Operação</span><strong>Ativa</strong></div><div className="suite-live-dot"><span /></div></div><div className="suite-mini-stat"><span>Tenant</span><strong>{state.company?.name || '—'}</strong></div><div className="suite-mini-stat"><span>Alertas críticos</span><strong>{openAlerts.length}</strong></div></div></div>
-    <div className="suite-kpis">{[
-      ['Colaboradores ativos', liveEmployees.length, Users, 'base atual'], ['Presença hoje', `${attendanceRate.toFixed(1)}%`, UserCheck, `${presentToday.length} registos`], ['Atrasos hoje', lateToday.length, Clock3, 'exceções de ponto'],
-      ['Férias pendentes', pendingVacations.length, CalendarCheck, 'aguardam decisão'], ['Horas extra · 7 dias', minutes(overtimeWeek), TrendingUp, 'assiduidade'], ['Horas noturnas · 7 dias', minutes(nightWeek), Target, 'assiduidade'],
-    ].map(([label, value, Icon, foot]) => <div className="suite-kpi" key={label}><div className="suite-kpi-top"><span>{label}</span><Icon size={17} /></div><strong>{value}</strong><span>{foot}</span></div>)}</div>
-    <div className="suite-two-col"><section className="suite-panel"><div className="suite-panel-head"><div><h2>Fila de decisões</h2><span>{pendingVacations.length + pendingOvertime.length} decisões pendentes</span></div><Button onClick={() => onNavigate('vacations')}>Abrir</Button></div>{[...pendingVacations.slice(0, 4).map((item) => ({ type: 'Férias', id: item.id, employee: employeeMap.get(item.employee_id)?.full_name, meta: `${date(item.start_date)} → ${date(item.end_date)} · ${item.days} dias` })), ...pendingOvertime.slice(0, 4).map((item) => ({ type: 'Horas extra', id: item.id, employee: employeeMap.get(item.employee_id)?.full_name, meta: `${minutes(item.minutes)} · ${item.reason || 'sem observação'}` }))].map((item) => <div className="suite-alert-row" key={`${item.type}-${item.id}`}><div className="suite-alert-icon warning"><Clock3 size={15} /></div><div className="suite-row-main"><strong>{item.employee || 'Colaborador'}</strong><span>{item.type} · {item.meta}</span></div><ArrowRight size={15} /></div>)}{pendingVacations.length + pendingOvertime.length === 0 && <div className="suite-empty">Não existem decisões pendentes.</div>}</section><section className="suite-panel"><div className="suite-panel-head"><div><h2>Centro de risco</h2><span>Sinais que merecem atenção</span></div><AlertTriangle size={18} /></div>{openAlerts.slice(0, 4).map((alert) => <div className="suite-recommendation warning" key={alert.id}><AlertTriangle size={17} /><div><strong>{alert.title}</strong><span>{alert.message}</span></div></div>)}{expiringDocs.slice(0, 2).map((doc) => <div className="suite-recommendation" key={doc.id}><FileText size={17} /><div><strong>Documento a expirar</strong><span>{employeeMap.get(doc.employee_id)?.full_name || 'Colaborador'} · {doc.title} · {date(doc.expires_at)}</span></div></div>)}{failedIntegrations.slice(0, 2).map((job) => <div className="suite-recommendation warning" key={job.id}><Zap size={17} /><div><strong>Integração com falha</strong><span>{job.provider} · {job.operation} · {job.last_error || job.status}</span></div></div>)}{openAlerts.length + expiringDocs.length + failedIntegrations.length === 0 && <div className="suite-empty">Sem exceções críticas.</div>}</section></div>
-    <div className="suite-two-col"><section className="suite-panel"><div className="suite-panel-head"><div><h2>Trabalho do RH</h2><span>{openTasks.length} tarefas abertas</span></div><Button icon={Plus} onClick={() => onNavigate('tasks')}>Nova tarefa</Button></div>{openTasks.slice(0, 5).map((task) => <div className="suite-row" key={task.id}><div className="suite-row-main"><strong>{task.title}</strong><span>{task.priority} · {task.due_at ? date(task.due_at) : 'sem prazo'}</span></div><Badge tone={task.priority === 'URGENT' ? 'danger' : task.priority === 'HIGH' ? 'warning' : 'neutral'}>{task.status}</Badge></div>)}{openTasks.length === 0 && <div className="suite-empty">A fila de trabalho está limpa.</div>}</section><section className="suite-panel"><div className="suite-panel-head"><div><h2>Operação de folha</h2><span>Últimos períodos registados</span></div><CalendarDays size={18} /></div>{state.payroll.slice(0, 4).map((run) => <div className="suite-row" key={run.id}><div className="suite-row-main"><strong>{String(run.period_month).padStart(2, '0')}/{run.period_year}</strong><span>{run.employee_count || 0} colaboradores · líquido {money(run.net_cents)}</span></div><Badge>{run.status}</Badge></div>)}{state.payroll.length === 0 && <div className="suite-empty">Ainda não existe ciclo de folha registado.</div>}</section></div>
+    <div className="tc-dashboard-welcome">
+      <div className="tc-dashboard-heading">
+        <div className="suite-eyebrow">TE-CONNECT · CENTRAL DE RH</div>
+        <h1>Bem-vindo à Central de RH!</h1>
+        <p>Aqui tudo se conecta para uma gestão de pessoas mais eficiente.</p>
+      </div>
+      <div className="tc-dashboard-hero">
+        <div className="tc-hero-art"><div className="tc-hero-glow" /><div className="tc-hero-gridlines" /><div className="tc-hero-person" /></div>
+        <div className="tc-hero-copy"><div className="tc-hero-brand">Te-connect <span>PEOPLE OS</span></div><h2>Pessoas <span>conectam</span> resultados.</h2><p>Tecnologia, dados e pessoas no mesmo lugar.</p><small>GESTÃO · ORGANIZAÇÃO · PRODUTIVIDADE · RESULTADOS</small></div>
+      </div>
+    </div>
+
+    <div className="tc-kpi-row">
+      <DashboardKpi icon={Users} label="Colaboradores ativos" value={activeCount} trend="Base atual" tone="blue" onClick={() => onNavigate('people')} />
+      <DashboardKpi icon={Clock3} label="A trabalhar agora" value={presentToday.length} trend="● Em atividade" tone="green" onClick={onOpenAttendance} />
+      <DashboardKpi icon={AlertTriangle} label="Atrasos hoje" value={lateToday.length} trend={lateToday.length ? ('+' + lateToday.length) : 'Sem atrasos'} tone="red" onClick={() => onNavigate('attendance')} />
+      <DashboardKpi icon={FileText} label="Pendências" value={pendingVacations.length + pendingOvertime.length} trend="● Requerem atenção" tone="blue" onClick={() => onNavigate('vacations')} />
+    </div>
+
+    <div className="tc-dashboard-grid">
+      <section className="suite-card tc-chart-card">
+        <div className="tc-card-head"><div><h2>Presença & assiduidade</h2><span>Evolução da presença da equipa nos últimos 7 dias.</span></div><div className="tc-card-actions"><span className="tc-live-chip">● Ao vivo</span><select defaultValue="7"><option value="7">Últimos 7 dias</option></select></div></div>
+        <div className="tc-bar-chart">{presenceSeries.map((item) => <div className="tc-bar-col" key={item.key}><strong>{item.value.toFixed(0)}%</strong><div className="tc-bar-track"><div className="tc-bar-fill" style={{ height: Math.max(8,item.value) + '%' }} /></div><span>{item.label}</span></div>)}</div>
+      </section>
+
+      <section className="suite-card tc-alert-card">
+        <div className="tc-card-head"><div><h2>Centro de alertas</h2><span>O que merece atenção agora.</span></div><button className="tc-link-btn" onClick={() => onNavigate('alerts')}>Ver todos →</button></div>
+        <div className="tc-alert-list">{alertItems.map((item, index) => { const Icon = item.icon; return <div className="tc-alert-item" key={index}><div className={'tc-alert-icon ' + item.tone}><Icon size={16}/></div><div><strong>{item.title}</strong><span>{item.subtitle}</span></div><time>{item.when}</time></div>; })}{alertItems.length === 0 && <div className="suite-empty">Sem alertas críticos.</div>}</div>
+      </section>
+    </div>
+
+    <div className="tc-lower-grid">
+      <section className="suite-card tc-simple-card"><div className="tc-card-head"><div><h2>Colaboradores em destaque</h2><span>Estado operacional da equipa.</span></div><button className="tc-link-btn" onClick={() => onNavigate('people')}>Ver todos →</button></div><div className="tc-highlight-list">
+        {highlights.map(({employee,label,tone}) => <button className="tc-highlight-row" key={employee.id} onClick={() => onNavigate('people')}><span className="tc-avatar">{initials(employee.full_name)}</span><span className="tc-highlight-main"><strong>{employee.full_name}</strong><small>{employee.employee_code || 'Colaborador'}</small></span><span className={'tc-status ' + tone}>● {label}</span></button>)}
+        {highlights.length===0 && <div className="suite-empty">Ainda não existem colaboradores.</div>}
+      </div></section>
+      <section className="suite-card tc-simple-card"><div className="tc-card-head"><div><h2>Próximos eventos</h2><span>Agenda operacional do RH.</span></div><button className="tc-link-btn" onClick={() => onNavigate('recruitment')}>Ver todos →</button></div><div className="tc-event-list">
+        {upcoming.map((item,index) => { const Icon = item.icon; return <div className="tc-event-row" key={index}><div className="tc-event-icon"><Icon size={15}/></div><div><strong>{item.title}</strong><span>{item.subtitle}</span></div><time>{item.when}</time></div>; })}
+        {upcoming.length===0 && <div className="suite-empty">Sem eventos próximos.</div>}
+      </div></section>
+    </div>
+
+    <div className="tc-bottom-grid">
+      <button className="suite-card tc-bottom-card" onClick={() => onNavigate('vacations')}><div className="tc-bottom-icon blue"><FileText size={18}/></div><div><strong>Pedidos pendentes</strong><span>Férias, ajustes e ausências.</span><b>{pendingVacations.length + pendingOvertime.length}</b></div><ArrowRight size={18}/></button>
+      <button className="suite-card tc-bottom-card" onClick={() => onNavigate('attendance')}><div className="tc-bottom-icon blue"><Clock3 size={18}/></div><div><strong>Horas extra</strong><span>Esta semana.</span><b>{minutes(overtimeWeek)}</b></div><ArrowRight size={18}/></button>
+      <button className="suite-card tc-bottom-card" onClick={() => onNavigate('vacations')}><div className="tc-bottom-icon blue"><CalendarCheck size={18}/></div><div><strong>Férias a aprovar</strong><span>Pedidos em análise.</span><b>{pendingVacations.length}</b></div><ArrowRight size={18}/></button>
+      <button className="suite-card tc-intelligence-card" onClick={() => onNavigate('analytics')}><div className="tc-intelligence-spark"><Sparkles size={22}/></div><div><strong>Intelligence Center</strong><span>Riscos, tendências e recomendações para agir antes do problema.</span></div><ArrowRight size={18}/></button>
+      <button className="suite-card tc-help-card" onClick={() => onNavigate('notifications')}><div className="tc-help-icon">◉</div><div><strong>Precisa de ajuda?</strong><span>A nossa equipa está disponível.</span><b>Falar agora</b></div></button>
+    </div>
   </>;
+}
+
+function DashboardKpi({ icon: Icon, label, value, trend, tone, onClick }) {
+  return <button type="button" className={'tc-kpi-card ' + tone} onClick={onClick}><div className="tc-kpi-icon"><Icon size={20}/></div><div className="tc-kpi-copy"><span>{label}</span><strong>{value}</strong><small>{trend}</small></div><ArrowRight size={18}/></button>;
 }
 
 function People({ employees, query, setQuery, canManage, onCreate, onOpen }) { const filtered = employees.filter((e) => `${e.full_name} ${e.email} ${e.employee_code} ${e.status}`.toLowerCase().includes(query.toLowerCase())); return <><div className="suite-section-head"><div><h2>Colaboradores</h2><span>{employees.length} registos acessíveis ao seu perfil</span></div>{canManage && <Button variant="primary" icon={UserPlus} onClick={onCreate}>Novo colaborador</Button>}</div><div className="suite-toolbar"><div className="suite-search"><Search size={16} /><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Pesquisar nome, código ou email" /></div><Filter size={16} /></div><div className="suite-card table-wrap"><table className="suite-table"><thead><tr><th>Colaborador</th><th>Código</th><th>Email</th><th>Admissão</th><th>Estado</th><th /></tr></thead><tbody>{filtered.map((employee) => <tr key={employee.id}><td><button className="suite-person-cell" onClick={() => onOpen(employee)}><span className="suite-avatar">{initials(employee.full_name)}</span><span><strong>{employee.full_name}</strong><small>{employee.phone || 'Sem telefone'}</small></span></button></td><td>{employee.employee_code || '—'}</td><td>{employee.email || '—'}</td><td>{date(employee.hire_date)}</td><td><Badge tone={employee.status === 'ACTIVE' ? 'positive' : 'warning'}>{employee.status}</Badge></td><td><ArrowRight size={15} /></td></tr>)}</tbody></table>{filtered.length === 0 && <div className="suite-empty">Nenhum colaborador encontrado.</div>}</div></>; }
