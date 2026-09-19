@@ -8,6 +8,7 @@ permissions:
 
 jobs:
   android-release:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 25
     env:
@@ -104,6 +105,7 @@ jobs:
           if-no-files-found: error
 
   ios-release:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: macos-latest
     timeout-minutes: 35
     steps:
