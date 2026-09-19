@@ -85,3 +85,23 @@
 @media(max-width:850px){
   .tc-side{background:linear-gradient(180deg,#061936 0%,#08244b 100%)}
 }
+
+
+/* Mobile attendance / employee clock */
+.tc-clock-state{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
+.tc-clock-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tc-clock-action{justify-content:center;min-height:44px}
+.tc-clock-action:disabled{opacity:.45;cursor:not-allowed}
+.tc-hours-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tc-hours-grid>div{padding:13px;border:1px solid #e2e9f2;background:#f7f9fc;border-radius:12px}
+.tc-hours-grid span{display:block;color:#7a879b;font-size:11px}
+.tc-hours-grid strong{display:block;color:#172641;font-size:20px;margin-top:5px}
+@media(max-width:700px){
+  .tc-clock{grid-template-columns:1fr}
+  .tc-clock-actions{grid-template-columns:repeat(2,1fr)}
+  .tc-clock-action{font-size:12px}
+}
+@media(max-width:430px){
+  .tc-clock-actions{grid-template-columns:1fr 1fr}
+  .tc-hours-grid{grid-template-columns:1fr 1fr}
+}
