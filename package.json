@@ -15,7 +15,8 @@
     "mobile:prepare:ios": "node scripts/prepare-native-permissions.mjs ios",
     "mobile:sync": "npm run mobile:prepare:android && npm run build && npx cap sync",
     "mobile:android": "npx cap open android",
-    "mobile:ios": "npx cap open ios"
+    "mobile:ios": "npx cap open ios",
+    "check:web-launch": "node scripts/check-web-launch.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
