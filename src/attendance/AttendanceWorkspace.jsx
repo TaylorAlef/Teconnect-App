@@ -30,6 +30,7 @@ export default function AttendanceWorkspace({ profile, locations: initialLocatio
   const [selected, setSelected] = useState(initialLocations[0]?.id || '');
   const [clock, setClock] = useState(null);
   const [live, setLive] = useState([]);
+  const [recentEntries, setRecentEntries] = useState([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [last, setLast] = useState(null);
@@ -41,7 +42,18 @@ export default function AttendanceWorkspace({ profile, locations: initialLocatio
     try {
       const locationQuery = supabase.from('work_locations').select('id,name,address,latitude,longitude,gps_radius_m,active').eq('company_id', profile.company_id).eq('active', true).order('name');
       const jobs = [supabase.rpc('get_my_clock_state'), locationQuery];
-      if (canMonitor) jobs.push(supabase.rpc('get_company_attendance_live'));
+      if (canMonitor) {
+        jobs.push(supabase.rpc('get_company_attendance_live'));
+        jobs.push(
+          supabase
+            .from('time_entries')
+            .select('id,employee_id,event_type,occurred_at,validation_status,gps_accuracy,work_location_id,employees:employee_id(full_name,employee_code),work_locations:work_location_id(name)')
+            .eq('company_id', profile.company_id)
+            .eq('validation_status', 'VALID')
+            .order('occurred_at', { ascending: false })
+            .limit(100),
+        );
+      }
       const results = await Promise.all(jobs);
       if (results[0].error) throw results[0].error;
       if (results[1].error) throw results[1].error;
@@ -51,7 +63,9 @@ export default function AttendanceWorkspace({ profile, locations: initialLocatio
       setClock(results[0].data || null);
       if (canMonitor) {
         if (results[2].error) throw results[2].error;
+        if (results[3].error) throw results[3].error;
         setLive(results[2].data || []);
+        setRecentEntries(results[3].data || []);
       }
     } catch (error) {
       console.error(error);
@@ -114,10 +128,39 @@ export default function AttendanceWorkspace({ profile, locations: initialLocatio
       <div className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Resumo de hoje</h2><span>{attendance?.work_date || 'Ainda sem dia calculado'}</span></div><ShieldCheck size={18} className="tc-ok" /></div><div className="tc-grid-6" style={{ gridTemplateColumns: 'repeat(2,1fr)', marginTop: 12 }}><Mini label="Horário" value={shift ? `${String(shift.start_time).slice(0,5)}–${String(shift.end_time).slice(0,5)}` : '—'} /><Mini label="Trabalhado" value={fmtMinutes(attendance?.worked_minutes)} /><Mini label="Atraso" value={fmtMinutes(attendance?.late_minutes)} /><Mini label="Extra" value={fmtMinutes(attendance?.overtime_minutes)} /></div><div className="tc-geofence" style={{ marginTop: 14 }}><MapPin size={16} /><span>{location ? `${location.name} · raio ${location.gps_radius_m} m` : 'Sem local configurado'}</span></div></div>
     </section>}
 
-    {!clock?.employee && <section className="tc-card tc-card-pad tc-section"><div className="tc-error"><AlertTriangle size={17} /> Esta conta não está associada a um colaborador. O painel RH continua disponível, mas a marcação pessoal só fica ativa após o vínculo da conta ao cadastro do colaborador.</div></section>}
+    {!clock?.employee && !canMonitor && <section className="tc-card tc-card-pad tc-section"><div className="tc-error"><AlertTriangle size={17} /> Esta conta não está associada a um colaborador. O painel RH continua disponível, mas a marcação pessoal só fica ativa após o vínculo da conta ao cadastro do colaborador.</div></section>}
 
     {canMonitor && <section className="tc-section"><div className="tc-section-head"><div><h2>Presença em tempo real</h2><span>{livePresent} presentes · {liveBreak} em pausa · {livePending} por iniciar</span></div><span className="tc-pill"><span className="tc-dot" /> atualização a cada 15s</span></div><div className="tc-card tc-card-pad"><table className="tc-table"><thead><tr><th>Colaborador</th><th>Estado</th><th>Última marcação</th><th>Local</th><th>Hoje</th><th>Atraso</th><th>Extra</th></tr></thead><tbody>{live.map((row) => <tr key={row.employee_id}><td><strong>{row.full_name}</strong><div className="tc-muted">{row.employee_code}</div></td><td><span className={`tc-badge ${row.presence_status === 'PRESENT' ? 'low' : row.presence_status === 'BREAK' ? 'medium' : row.presence_status === 'OFF' ? 'high' : 'low'}`}>{statusLabel[row.presence_status] || row.presence_status}</span></td><td>{row.last_event_at ? `${eventLabel[row.last_event_type] || row.last_event_type} · ${new Date(row.last_event_at).toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}` : 'Sem marcação'}</td><td>{row.last_location_name || '—'}</td><td>{fmtMinutes(row.worked_minutes)}</td><td>{fmtMinutes(row.late_minutes)}</td><td>{fmtMinutes(row.overtime_minutes)}</td></tr>)}</tbody></table>{live.length === 0 && <div className="tc-empty">Nenhum colaborador ativo neste tenant.</div>}</div></section>}
 
+    {canMonitor && <section className="tc-section">
+      <div className="tc-section-head">
+        <div><h2>Marcações recentes</h2><span>Últimos registos válidos recebidos pelo servidor</span></div>
+        <span className="tc-pill"><Clock3 size={14} /> {recentEntries.length} registos carregados</span>
+      </div>
+      <div className="tc-card tc-card-pad">
+        {recentEntries.length > 0 ? (
+          <div className="tc-list">
+            {recentEntries.slice(0, 20).map((entry) => {
+              const employee = Array.isArray(entry.employees) ? entry.employees[0] : entry.employees;
+              const workLocation = Array.isArray(entry.work_locations) ? entry.work_locations[0] : entry.work_locations;
+              return (
+                <div className="tc-row" key={entry.id}>
+                  <div>
+                    <div className="tc-row-title">{employee?.full_name || "Colaborador"} <span className="tc-muted">· {employee?.employee_code || "—"}</span></div>
+                    <div className="tc-row-sub">
+                      {eventLabel[entry.event_type] || entry.event_type} · {new Date(entry.occurred_at).toLocaleString("pt-PT", { timeZone: "Europe/Lisbon", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                      {" · "}{workLocation?.name || "Sem local"}
+                      {entry.gps_accuracy != null ? " · GPS ±" + Math.round(Number(entry.gps_accuracy)) + " m" : ""}
+                    </div>
+                  </div>
+                  <span className="tc-badge low">VALID</span>
+                </div>
+              );
+            })}
+          </div>
+        ) : <div className="tc-empty">Ainda não existem marcações válidas no tenant.</div>}
+      </div>
+    </section>}
     <section className="tc-section"><div className="tc-section-head"><div><h2>Locais autorizados</h2><span>{locations.length} locais ativos</span></div></div><div className="tc-card tc-card-pad">{locations.map((item) => <div className="tc-row" key={item.id}><div className="tc-row-main"><div className="tc-row-title">{item.name}</div><div className="tc-row-sub">{item.address || 'Morada não definida'} · geofence {item.gps_radius_m} m{item.latitude == null || item.longitude == null ? ' · coordenadas pendentes' : ''}</div></div><MapPin size={16} className={item.latitude != null && item.longitude != null ? 'tc-ok' : 'tc-muted'} /></div>)}{locations.length === 0 && <div className="tc-empty">Sem instalações. Configure um local no onboarding ou no cadastro operacional.</div>}</div></section>
 
     <section className="tc-section"><div className="tc-section-head"><div><h2>Indicadores recentes</h2><span>atrasos, saídas antecipadas, horas extra e noite</span></div></div><div className="tc-list">{anomalies.slice(0,12).map((a) => <div className="tc-row" key={a.id}><div><div className="tc-row-title">{a.work_date}</div><div className="tc-row-sub">{fmtMinutes(a.worked_minutes)} trabalhado · {fmtMinutes(a.overtime_minutes)} extra · {a.late_minutes || 0} min atraso · {a.early_leave_minutes || 0} min saída antecipada · {a.night_minutes || 0} min noite</div></div><span className={`tc-badge ${(a.late_minutes || a.early_leave_minutes) ? 'high' : 'medium'}`}>{a.status}</span></div>)}{anomalies.length===0 && <div className="tc-empty">Ainda não existem indicadores de assiduidade calculados.</div>}</div></section>
