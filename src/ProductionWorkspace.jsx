@@ -393,7 +393,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
         {state.error && <div className="suite-note" style={{ marginBottom: 14 }}><AlertTriangle size={16} /><span>{state.error}</span><Button onClick={() => load()}>Tentar novamente</Button></div>}
         <div className="suite-page-intro"><div><div className="suite-eyebrow"><Sparkles size={14} /> {meta?.[0]}</div><h1>{meta?.[1]}</h1><p>{meta?.[1]} · empresa <strong>{state.company?.name || 'atual'}</strong>.</p></div><div className="suite-page-meta"><span><ShieldCheck size={14} /> Controlo por empresa</span><span><Activity size={14} /> Operação ligada ao Supabase</span></div></div>
 
-        {page === 'overview' && <Overview state={state} liveEmployees={liveEmployees} presentToday={presentToday} lateToday={lateToday} pendingVacations={pendingVacations} pendingOvertime={pendingOvertime} openTasks={openTasks} openAlerts={openAlerts} expiringDocs={expiringDocs} failedIntegrations={failedIntegrations} employeeMap={employeeMap} onNavigate={setPage} onOpenPanel={onOpenPanel} onOpenAttendance={onOpenAttendance} onRefresh={() => load()} />}
+        {page === 'overview' && <Overview state={state} liveEmployees={liveEmployees} presentToday={presentToday} lateToday={lateToday} pendingVacations={pendingVacations} pendingOvertime={pendingOvertime} openTasks={openTasks} openAlerts={openAlerts} expiringDocs={expiringDocs} failedIntegrations={failedIntegrations} employeeMap={employeeMap} profile={profile} onNavigate={setPage} onOpenPanel={onOpenPanel} onOpenAttendance={onOpenAttendance} onRefresh={() => load()} />}
         {page === 'people' && <People employees={state.employees} query={query} setQuery={setQuery} canManage={canManage} onCreate={() => setModal({ type: 'employee' })} onOpen={(item) => setModal({ type: 'employee-detail', item })} />}
         {page === 'recruitment' && canManage && <Recruitment jobs={state.jobs} candidates={state.candidates} interviews={state.interviews} candidateMap={candidateMap} employeeMap={employeeMap} onCreateCandidate={() => setModal({ type: 'candidate' })} onCreateJob={() => setModal({ type: 'job' })} onInterview={() => setModal({ type: 'interview' })} onStage={updateCandidateStage} />}
         {page === 'onboarding' && canManage && <Onboarding employees={state.employees} documents={state.documents} invitations={state.invitations} trainings={state.trainings} onInvite={() => notify('Use o Gestor de acesso para enviar o convite e ligar o utilizador ao colaborador.')} onOpenAccess={() => onOpenPanel?.('employee-access')} />}
@@ -423,7 +423,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
 }
 
 
-function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacations, pendingOvertime, openTasks, openAlerts, expiringDocs, failedIntegrations, employeeMap, onNavigate, onOpenPanel, onOpenAttendance, onRefresh }) {
+function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacations, pendingOvertime, openTasks, openAlerts, expiringDocs, failedIntegrations, employeeMap, profile, onNavigate, onOpenPanel, onOpenAttendance, onRefresh }) {
   const activeCount = liveEmployees.length;
   const attendanceRate = activeCount ? (presentToday.length / activeCount) * 100 : 0;
   const overtimeWeek = state.attendance.filter((item) => new Date(item.work_date) >= new Date(Date.now() - 7 * 86400000)).reduce((sum, item) => sum + Number(item.overtime_minutes || 0), 0);
@@ -459,7 +459,7 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
     <div className="tc-dashboard-welcome">
       <div className="tc-dashboard-heading">
         <div className="suite-eyebrow">TE-CONNECT · CENTRAL DE RH</div>
-        <h1>Bem-vindo à Central de RH!</h1>
+        <h1>Bem-vindo, ${((profile?.full_name || 'Administrador').trim().split(/\s+/)[0])}!</h1>
         <p>Aqui tudo se conecta para uma gestão de pessoas mais eficiente.</p>
       </div>
       <div className="tc-dashboard-hero">
