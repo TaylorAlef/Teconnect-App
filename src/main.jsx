@@ -200,6 +200,40 @@ function NativeLogin({ onSuccess }) {
   );
 }
 
+function PasswordRecoveryPage({ onComplete }) {
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const submit = async (event) => {
+    event.preventDefault();
+    setError('');
+    if (password.length < 8) return setError('A nova palavra-passe deve ter pelo menos 8 caracteres.');
+    if (password !== confirmation) return setError('As palavras-passe não coincidem.');
+    setBusy(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) throw updateError;
+      alert('Palavra-passe atualizada com sucesso. Entre novamente no Te-connect.');
+      await onComplete?.();
+    } catch (e) {
+      setError(e?.message || 'Não foi possível atualizar a palavra-passe.');
+    } finally {
+      setBusy(false);
+    }
+  };
+  return <div className="tc-login-shell"><div className="tc-login-card">
+    <div className="tc-login-brand"><img className="tc-auth-logo" src="/teconnect-logo.svg" alt="Te-connect" /><div><strong>Te-connect</strong><span>Recuperação de acesso</span></div></div>
+    <div className="tc-login-kicker">SEGURANÇA</div><h1>Definir nova palavra-passe</h1><p>Escolha uma nova palavra-passe para voltar ao seu acesso empresarial.</p>
+    {error && <div className="tc-login-message error">{error}</div>}
+    <form onSubmit={submit} className="tc-login-form">
+      <label>Nova palavra-passe<input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+      <label>Confirmar palavra-passe<input type="password" autoComplete="new-password" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} required /></label>
+      <button className="tc-login-submit" type="submit" disabled={busy}>{busy ? 'A atualizar…' : 'Atualizar palavra-passe'}</button>
+    </form>
+  </div></div>;
+}
+
 function CommercialBridge() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
@@ -213,6 +247,7 @@ function CommercialBridge() {
   const [attendanceLocations, setAttendanceLocations] = useState([]);
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
   const [authLoading, setAuthLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
   const isDemoMode = useMemo(() => new URLSearchParams(window.location.search).get('demo') === '1', []);
 
   const loadCommercial = useCallback(async (activeSession) => {
@@ -291,7 +326,9 @@ function CommercialBridge() {
         if (active) setAuthLoading(false);
       }
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+      if (event === 'SIGNED_OUT') setRecoveryMode(false);
       setSession(nextSession || null);
       loadCommercial(nextSession || null).catch(console.error);
       if (!nextSession) {
@@ -323,12 +360,17 @@ function CommercialBridge() {
     setPanel(null);
   };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
-  if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (authLoading) return (
+
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
       <div style={{ textAlign: 'center' }}><img className="tc-auth-logo tc-auth-logo-small" src="/teconnect-logo.svg" alt="Te-connect" /><strong>A iniciar o Te-connect…</strong></div>
     </div>
   );
+  if (recoveryMode && session) return <PasswordRecoveryPage onComplete={async () => {
+    setRecoveryMode(false);
+    await supabase.auth.signOut();
+  }} />;
+  if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (!session) return <NativeLogin onSuccess={(nextSession) => setSession(nextSession)} />;
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
   if (!profile && profileLoadError) {
