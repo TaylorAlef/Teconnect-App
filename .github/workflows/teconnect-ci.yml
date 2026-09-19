@@ -27,6 +27,8 @@ jobs:
         run: npm run check:globalization
       - name: Web launch guard
         run: npm run check:web-launch
+      - name: SaaS contract guard
+        run: npm run check:saas-contract
 
       - name: Mobile readiness guard
         run: npm run mobile:check
