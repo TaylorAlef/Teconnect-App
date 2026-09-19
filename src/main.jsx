@@ -263,7 +263,7 @@ function CommercialBridge() {
   if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (authLoading) return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <div style={{ textAlign: 'center' }}><div className="tc-brand-mark" style={{ margin: '0 auto 12px' }}>T</div><strong>A iniciar o Te-connect…</strong></div>
+      <div style={{ textAlign: 'center' }}><img className="tc-auth-logo tc-auth-logo-small" src="/teconnect-logo.svg" alt="Te-connect" /><strong>A iniciar o Te-connect…</strong></div>
     </div>
   );
   if (!session) return <NativeLogin onSuccess={(nextSession) => setSession(nextSession)} />;
@@ -272,7 +272,7 @@ function CommercialBridge() {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f4f7fb', color: '#10223f', fontFamily: 'Inter, system-ui, sans-serif' }}>
         <div style={{ width: '100%', maxWidth: 520, padding: 28, borderRadius: 20, border: '1px solid #e3eaf4', background: '#fff', boxShadow: '0 20px 55px rgba(16,42,79,.10)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><div className="tc-brand-mark" style={{ width: 54, height: 54 }} /><div><strong style={{ display: 'block', fontSize: 20 }}>Te-connect</strong><span style={{ color: '#71809a', fontSize: 12 }}>Acesso empresarial</span></div></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 18 }}><img className="tc-auth-logo" src="/teconnect-logo.svg" alt="Te-connect" /><div><strong style={{ display: 'block', fontSize: 20 }}>Te-connect</strong><span style={{ color: '#71809a', fontSize: 12 }}>Acesso empresarial</span></div></div>
           <h1 style={{ margin: '0 0 8px', fontSize: 22 }}>Não foi possível carregar o perfil</h1>
           <p style={{ margin: '0 0 16px', color: '#66758d', lineHeight: 1.6, fontSize: 13 }}>A sessão foi encontrada, mas o perfil do utilizador não foi carregado. A aplicação foi interrompida com segurança para evitar uma página em branco.</p>
           <div style={{ padding: 12, borderRadius: 10, background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', fontSize: 12, lineHeight: 1.5 }}>{profileLoadError.message}</div>
