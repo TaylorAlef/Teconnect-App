@@ -20,8 +20,9 @@ if (missing.length) {
   process.exit(1);
 }
 
-if (packageJson.scripts?.['mobile:sync'] !== 'npm run build && npx cap sync') {
-  console.error('Mobile readiness check failed: mobile:sync script is not configured as expected.');
+const mobileSync = packageJson.scripts?.['mobile:sync'] || '';
+if (!mobileSync.includes('npm run build') || !mobileSync.includes('npx cap sync')) {
+  console.error('Mobile readiness check failed: mobile:sync must run the production build and Capacitor sync.');
   process.exit(1);
 }
 
