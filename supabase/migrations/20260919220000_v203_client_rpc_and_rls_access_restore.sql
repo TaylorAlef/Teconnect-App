@@ -1,0 +1,80 @@
+-- v203: restore only the client RPCs intentionally used by the SaaS UI.
+-- Restore private helpers required by RLS policies and close accidental anon table grants.
+begin;
+
+grant usage on schema private to authenticated;
+grant execute on function private.current_profile_company_id() to authenticated;
+grant execute on function private.current_profile_role() to authenticated;
+grant execute on function private.current_employee_id() to authenticated;
+grant execute on function private.current_subscription() to authenticated;
+grant execute on function private.is_company_admin_or_hr() to authenticated;
+grant execute on function private.is_managed_employee(uuid) to authenticated;
+grant execute on function private.is_manager() to authenticated;
+grant execute on function private.is_self_employee(uuid) to authenticated;
+revoke execute on function private.current_profile_company_id() from anon, public;
+revoke execute on function private.current_profile_role() from anon, public;
+revoke execute on function private.current_employee_id() from anon, public;
+revoke execute on function private.current_subscription() from anon, public;
+revoke execute on function private.is_company_admin_or_hr() from anon, public;
+revoke execute on function private.is_managed_employee(uuid) from anon, public;
+revoke execute on function private.is_manager() from anon, public;
+revoke execute on function private.is_self_employee(uuid) from anon, public;
+
+revoke all on all tables in schema public from anon;
+alter default privileges in schema public revoke all on tables from anon;
+
+grant execute on function public.get_billing_plans() to authenticated;
+grant execute on function public.get_my_billing() to authenticated;
+grant execute on function public.get_my_onboarding_v1() to authenticated;
+grant execute on function public.save_onboarding_v1_progress(integer, jsonb) to authenticated;
+grant execute on function public.create_company_onboarding(text, text, text, text) to authenticated;
+grant execute on function public.save_company_setup(jsonb, boolean) to authenticated;
+grant execute on function public.update_company_setup_profile(text, text, text, text, text) to authenticated;
+grant execute on function public.get_company_attendance_live() to authenticated;
+grant execute on function public.list_company_audit_logs(integer, timestamptz) to authenticated;
+grant execute on function public.approve_absence_app(uuid, boolean) to authenticated;
+grant execute on function public.get_people_performance_summary(uuid) to authenticated;
+grant execute on function public.assign_training_app(uuid, uuid, text) to authenticated;
+grant execute on function public.offboard_employee_app(uuid, date, text, jsonb) to authenticated;
+grant execute on function public.request_overtime(integer, text, uuid) to authenticated;
+grant execute on function public.create_my_absence_request(date, date, text, uuid) to authenticated;
+grant execute on function public.create_api_key_app(text, timestamptz) to authenticated;
+grant execute on function public.revoke_api_key_app(uuid) to authenticated;
+grant execute on function public.create_webhook_endpoint_app(text, text, text[]) to authenticated;
+grant execute on function public.revoke_webhook_endpoint_app(uuid) to authenticated;
+grant execute on function public.get_payroll_readiness(integer, integer) to authenticated;
+grant execute on function public.prepare_payroll_period(integer, integer) to authenticated;
+grant execute on function public.create_payroll_draft(integer, integer) to authenticated;
+grant execute on function public.set_profile_role_app(uuid, text) to authenticated;
+grant execute on function public.get_saas_admin_overview() to authenticated;
+grant execute on function public.list_saas_companies() to authenticated;
+grant execute on function public.super_admin_set_subscription(uuid, text, text, integer) to authenticated;
+
+revoke execute on function public.get_billing_plans() from anon, public;
+revoke execute on function public.get_my_billing() from anon, public;
+revoke execute on function public.get_my_onboarding_v1() from anon, public;
+revoke execute on function public.save_onboarding_v1_progress(integer, jsonb) from anon, public;
+revoke execute on function public.create_company_onboarding(text, text, text, text) from anon, public;
+revoke execute on function public.save_company_setup(jsonb, boolean) from anon, public;
+revoke execute on function public.update_company_setup_profile(text, text, text, text, text) from anon, public;
+revoke execute on function public.get_company_attendance_live() from anon, public;
+revoke execute on function public.list_company_audit_logs(integer, timestamptz) from anon, public;
+revoke execute on function public.approve_absence_app(uuid, boolean) from anon, public;
+revoke execute on function public.get_people_performance_summary(uuid) from anon, public;
+revoke execute on function public.assign_training_app(uuid, uuid, text) from anon, public;
+revoke execute on function public.offboard_employee_app(uuid, date, text, jsonb) from anon, public;
+revoke execute on function public.request_overtime(integer, text, uuid) from anon, public;
+revoke execute on function public.create_my_absence_request(date, date, text, uuid) from anon, public;
+revoke execute on function public.create_api_key_app(text, timestamptz) from anon, public;
+revoke execute on function public.revoke_api_key_app(uuid) from anon, public;
+revoke execute on function public.create_webhook_endpoint_app(text, text, text[]) from anon, public;
+revoke execute on function public.revoke_webhook_endpoint_app(uuid) from anon, public;
+revoke execute on function public.get_payroll_readiness(integer, integer) from anon, public;
+revoke execute on function public.prepare_payroll_period(integer, integer) from anon, public;
+revoke execute on function public.create_payroll_draft(integer, integer) from anon, public;
+revoke execute on function public.set_profile_role_app(uuid, text) from anon, public;
+revoke execute on function public.get_saas_admin_overview() from anon, public;
+revoke execute on function public.list_saas_companies() from anon, public;
+revoke execute on function public.super_admin_set_subscription(uuid, text, text, integer) from anon, public;
+
+end;
