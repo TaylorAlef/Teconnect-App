@@ -214,7 +214,6 @@ function PasswordRecoveryPage({ onComplete }) {
     try {
       const { error: updateError } = await supabase.auth.updateUser({ password });
       if (updateError) throw updateError;
-      alert('Palavra-passe atualizada com sucesso. Entre novamente no Te-connect.');
       await onComplete?.();
     } catch (e) {
       setError(e?.message || 'Não foi possível atualizar a palavra-passe.');
@@ -226,6 +225,7 @@ function PasswordRecoveryPage({ onComplete }) {
     <div className="tc-login-brand"><img className="tc-auth-logo" src="/teconnect-logo.svg" alt="Te-connect" /><div><strong>Te-connect</strong><span>Recuperação de acesso</span></div></div>
     <div className="tc-login-kicker">SEGURANÇA</div><h1>Definir nova palavra-passe</h1><p>Escolha uma nova palavra-passe para voltar ao seu acesso empresarial.</p>
     {error && <div className="tc-login-message error">{error}</div>}
+    {!error && password.length >= 8 && confirmation === password && <div className="tc-login-message success">A nova palavra-passe está pronta para ser atualizada com segurança.</div>}
     <form onSubmit={submit} className="tc-login-form">
       <label>Nova palavra-passe<input type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
       <label>Confirmar palavra-passe<input type="password" autoComplete="new-password" value={confirmation} onChange={(e) => setConfirmation(e.target.value)} required /></label>
