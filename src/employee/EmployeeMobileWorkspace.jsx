@@ -238,7 +238,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
 
   return <div className="te-employee-app">
     <header className="te-employee-topbar">
-      <div className="te-employee-brand"><div className="te-employee-mark">T</div><div><strong>Te-connect</strong><span>Espaço do colaborador</span></div></div>
+      <div className="te-employee-brand"><img src="/teconnect-logo.svg" alt="Te-connect" className="te-employee-logo" /><div><strong>Te-connect</strong><span>Espaço do colaborador</span></div></div>
       <div className="te-employee-actions"><span className={online ? 'te-online-dot' : 'te-offline-chip'}>{online ? 'Online' : 'Offline'}</span><button type="button" className="te-icon-btn" onClick={() => setTab('account')} aria-label="Conta"><UserRound size={18} /></button></div>
     </header>
 
@@ -256,6 +256,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
         </section>
 
         {clock?.employee ? <section className="te-employee-punch">
+          <div className="te-punch-now"><div><span className="te-overline">Marcação de hoje</span><strong>{attendance?.first_clock_in ? fmtTime(attendance.first_clock_in) : 'Ainda não marcou'}</strong><small>{attendance?.last_clock_out ? 'Última saída ' + fmtTime(attendance.last_clock_out) : 'A jornada permanece protegida por GPS'}</small></div><span className="te-punch-state">{state === 'WORKING' ? 'Em serviço' : state === 'ON_BREAK' ? 'Em pausa' : 'Pronto'}</span></div>
           <div className="te-card-head"><div><span className="te-overline">Marcação de ponto</span><h2>Registar presença</h2></div><span className="te-gps-chip"><MapPin size={14} /> GPS</span></div>
           <div className="te-punch-grid">
             <button type="button" className="te-punch-btn primary" disabled={!!busy || state !== 'OFF'} onClick={() => punch('CLOCK_IN')}><CheckCircle2 size={22} /><strong>Entrada</strong><span>Iniciar jornada</span></button>
@@ -263,6 +264,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
             <button type="button" className="te-punch-btn resume" disabled={!!busy || state !== 'ON_BREAK'} onClick={() => punch('BREAK_END')}><Play size={22} /><strong>Retomar</strong><span>Voltar à jornada</span></button>
             <button type="button" className="te-punch-btn exit" disabled={!!busy || state !== 'WORKING'} onClick={() => punch('CLOCK_OUT')}><TimerReset size={22} /><strong>Saída</strong><span>Terminar jornada</span></button>
           </div>
+          <div className="te-punch-helper"><ShieldCheck size={14} /><span>Cada marcação é validada pelo servidor e associada ao local autorizado.</span></div>
           <button type="button" className="te-location-card" onClick={locate} disabled={gps.loading}>
             <span className="te-location-icon"><MapPin size={18} /></span>
             <span><strong>{gps.location?.name || 'Validar localização'}</strong><small>{gps.location ? Math.round(gps.distance) + ' m · raio ' + gps.radius + ' m · precisão ±' + Math.round(gps.accuracy || 0) + ' m' : 'O GPS é validado no momento da marcação'}</small></span>
