@@ -24,3 +24,39 @@
 .te-employee-loading{display:grid;place-items:center;gap:10px;min-height:100vh;color:#91a0b5}.te-employee-loading span{font-size:11px}
 @media(min-width:760px){.te-employee-app{padding-bottom:32px}.te-employee-topbar{position:relative}.te-employee-main{padding:28px 20px 48px}.te-employee-tabbar{position:fixed;left:50%;right:auto;transform:translateX(-50%);width:420px}}
 @media(max-width:420px){.te-employee-main{padding-inline:12px}.te-punch-grid{gap:8px}.te-punch-btn{min-height:104px;padding:12px}.te-day-item{grid-template-columns:1fr 1fr}.te-day-item>div:nth-child(n+2){text-align:left}.te-entry-item{grid-template-columns:74px 58px 1fr}}
+
+/* Te-connect employee mobile — premium clocking experience */
+.te-employee-app{background:radial-gradient(circle at 50% -8%,rgba(45,111,235,.18),transparent 32%),#07111f}
+.te-employee-topbar{height:74px;padding:0 18px;background:rgba(6,14,27,.88);border-bottom-color:rgba(119,161,226,.12)}
+.te-employee-brand{gap:9px}.te-employee-logo{width:82px;height:38px;object-fit:contain;object-position:left center;filter:drop-shadow(0 5px 15px rgba(20,113,255,.16))}
+.te-employee-brand strong{font-size:14px}.te-employee-brand span{font-size:9px;color:#7e8da5}
+.te-employee-mark{display:none}
+.te-employee-main{width:min(620px,100%);padding:20px 16px 34px}
+.te-employee-stack{gap:13px}
+.te-employee-hero{padding:2px 2px 4px}
+.te-employee-hero>div>span{font-size:8px;letter-spacing:.14em;color:#8293ae}
+.te-employee-hero h1{font-size:27px;margin:6px 0 4px}.te-employee-hero p{font-size:11px}
+.te-employee-status{position:relative;overflow:hidden;padding:20px;border-radius:22px;background:linear-gradient(145deg,#10264a,#091423);border-color:rgba(84,145,255,.16);box-shadow:0 20px 55px rgba(0,0,0,.24)}
+.te-employee-status:after{content:"";position:absolute;width:170px;height:170px;right:-55px;top:-75px;border-radius:50%;background:radial-gradient(circle,rgba(78,160,255,.22),transparent 70%)}
+.te-employee-status.working{background:linear-gradient(145deg,#0b3829,#081e17);border-color:rgba(78,226,157,.18)}
+.te-employee-status.on_break{background:linear-gradient(145deg,#3b2b0f,#1c1508);border-color:rgba(255,198,105,.18)}
+.te-status-line{position:relative;z-index:1}.te-status-line strong{font-size:20px}.te-clock-large{position:relative;z-index:1;font-size:48px;margin:20px 0 10px}.te-status-foot{position:relative;z-index:1}
+.te-employee-punch{padding:16px;border-color:rgba(121,157,211,.12);background:linear-gradient(180deg,#0d1929,#0a131f)}
+.te-punch-now{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 13px;margin-bottom:14px;border-radius:14px;background:#091523;border:1px solid rgba(121,157,211,.11)}
+.te-punch-now>div{min-width:0}.te-punch-now strong{display:block;font-size:18px;margin-top:3px}.te-punch-now small{display:block;font-size:8px;color:#7f8fa7;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.te-punch-state{padding:6px 8px;border-radius:999px;background:#edf7ff;color:#2468df;font-size:8px;font-weight:850;white-space:nowrap}.te-employee-status.working~* .te-punch-state{background:#eafaf2;color:#159a65}
+.te-punch-grid{grid-template-columns:1fr 1fr;gap:9px}
+.te-punch-btn{min-height:106px;padding:14px;border-radius:15px;transition:transform .16s ease,opacity .16s ease,box-shadow .16s ease}
+.te-punch-btn:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 13px 26px rgba(0,0,0,.16)}
+.te-punch-btn.primary{box-shadow:0 12px 25px rgba(35,105,220,.15)}
+.te-punch-btn strong{font-size:14px}.te-punch-btn span{font-size:9px}
+.te-punch-helper{display:flex;align-items:center;gap:7px;padding:10px 2px 1px;color:#71819a;font-size:8px;line-height:1.45}.te-punch-helper svg{color:#659df1;flex:0 0 auto}
+.te-location-card{margin-top:10px;background:#091421;border-color:rgba(121,157,211,.1)}
+.te-gps-result{font-size:9px}
+.te-employee-metrics>div{padding:13px 14px;background:linear-gradient(180deg,#0b1726,#09131f);border-color:rgba(121,157,211,.09)}
+.te-employee-metrics strong{font-size:19px}.te-employee-shift{background:linear-gradient(180deg,#0d1929,#0a131f)}
+.te-employee-tabbar{left:16px;right:16px;bottom:14px;height:70px;border-radius:21px;background:rgba(6,13,24,.92);border-color:rgba(121,157,211,.14)}
+.te-employee-tabbar button{font-size:8px}.te-employee-tabbar button.active{background:linear-gradient(180deg,#f5f8ff,#e7eefc);color:#14335f;box-shadow:0 5px 16px rgba(92,132,210,.15)}
+.te-employee-toast{bottom:96px;border-radius:15px}
+@media(max-width:420px){.te-employee-main{padding-inline:12px}.te-punch-btn{min-height:102px}.te-punch-now{padding:11px}.te-punch-now strong{font-size:17px}.te-clock-large{font-size:43px}.te-employee-logo{width:76px}}
+@media(min-width:760px){.te-employee-app{background:radial-gradient(circle at 50% -10%,rgba(45,111,235,.15),transparent 35%),#07111f}.te-employee-main{padding-top:30px}.te-employee-tabbar{width:420px}}
