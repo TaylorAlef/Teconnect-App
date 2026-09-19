@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "node scripts/prepare-owner-photo.mjs && vite build",
     "preview": "vite preview",
     "deploy": "wrangler deploy",
     "check:branding": "node scripts/check-branding.mjs",
