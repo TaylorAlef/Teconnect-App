@@ -1,10 +1,16 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "teconnect-app",
-  "compatibility_date": "2026-09-17",
+  "compatibility_date": "2026-09-19",
+  "workers_dev": false,
+  "routes": [
+    {
+      "pattern": "app.te-connect.com",
+      "custom_domain": true
+    }
+  ],
   "assets": {
-    "directory": "./dist",
-    "not_found_handling": "single-page-application",
-    "run_worker_first": false
+    "directory": "./dist/",
+    "not_found_handling": "single-page-application"
   }
 }
