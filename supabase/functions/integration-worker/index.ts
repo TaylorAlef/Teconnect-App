@@ -183,18 +183,51 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'POST only' }), { status: 405, headers: { 'content-type': 'application/json' } })
   }
-  if (workerSecret && request.headers.get('x-teconnect-worker-secret') !== workerSecret) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'content-type': 'application/json' } })
-  }
 
   try {
-    const { data: jobs, error } = await supabase
+    let companyId: string | null = null
+
+    if (workerSecret) {
+      if (request.headers.get('x-teconnect-worker-secret') !== workerSecret) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'content-type': 'application/json' } })
+      }
+    } else {
+      // Development/fallback mode: require a signed-in HR/admin and constrain
+      // processing to that actor's company. This prevents cross-tenant queue access.
+      const authorization = request.headers.get('Authorization')
+      if (!authorization) {
+        return new Response(JSON.stringify({ error: 'AUTH_REQUIRED' }), { status: 401, headers: { 'content-type': 'application/json' } })
+      }
+      const client = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authorization } },
+        auth: { persistSession: false, autoRefreshToken: false },
+      })
+      const { data: { user } } = await client.auth.getUser()
+      if (!user) {
+        return new Response(JSON.stringify({ error: 'AUTH_REQUIRED' }), { status: 401, headers: { 'content-type': 'application/json' } })
+      }
+      const { data: profile, error: profileError } = await client
+        .from('profiles')
+        .select('company_id,role,active')
+        .eq('id', user.id)
+        .maybeSingle()
+      if (profileError || !profile?.active || !['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH'].includes(profile.role)) {
+        return new Response(JSON.stringify({ error: 'FORBIDDEN' }), { status: 403, headers: { 'content-type': 'application/json' } })
+      }
+      companyId = profile.company_id
+    }
+
+    let query = supabase
       .from('integration_jobs')
       .select('id,company_id,provider,operation,entity_type,entity_id,status,payload,attempts,next_attempt_at,idempotency_key')
       .eq('status', 'PENDING')
       .lte('next_attempt_at', new Date().toISOString())
       .order('created_at', { ascending: true })
       .limit(MAX_BATCH)
+
+    if (companyId) query = query.eq('company_id', companyId)
+
+    const { data: jobs, error } = await query
     if (error) throw error
 
     const results = []
