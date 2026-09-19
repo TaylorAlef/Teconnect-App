@@ -327,12 +327,62 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
     payroll: ['Folha', 'Preparação, aprovação e encerramento de períodos'], integrations: ['Integrações', 'Filas, estado de processamento e falhas'], notifications: ['Notificações', 'Comunicação operacional e pendências'],
   }[page];
 
+  const navigationGroups = [
+    { label: 'Principal', items: [
+      { page: 'overview', label: 'Dashboard', icon: Activity },
+      { page: 'people', label: 'Colaboradores', icon: Users },
+    ]},
+    { label: 'Tempo & jornada', items: [
+      { page: 'attendance', label: 'Registos de Ponto', icon: Clock3 },
+      { action: 'attendance', label: 'Picagem Móvel', icon: Clock3 },
+      { action: 'panel', panel: 'rules', label: 'Motor de Jornada', icon: Zap },
+      { page: 'attendance', label: 'Assiduidade Inteligente', icon: TrendingUp },
+      { action: 'panel', panel: 'rules', label: 'Horários & Turnos', icon: CalendarDays },
+    ]},
+    { label: 'Intelligence & operações', items: [
+      { page: 'overview', label: 'Command Center', icon: Activity },
+      { action: 'panel', panel: 'analytics', label: 'Intelligence Center', icon: Sparkles },
+      { action: 'panel', panel: 'approvals', label: 'Aprovações', icon: CheckCircle2 },
+      { page: 'alerts', label: 'Central de Alertas', icon: AlertTriangle },
+    ]},
+    { label: 'Pessoas & RH', items: [
+      { page: 'vacations', label: 'Férias & Ausências', icon: CalendarCheck },
+      { page: 'documents', label: 'Documentos', icon: FileText },
+      { page: 'development', label: 'Desenvolvimento', icon: BookOpen },
+      { page: 'tasks', label: 'Tarefas RH', icon: CheckCircle2 },
+      { page: 'integrations', label: 'Integrações', icon: Zap },
+      { page: 'notifications', label: 'Notificações', icon: Bell },
+    ]},
+  ];
+
+  const handleNavigation = (item) => {
+    if (item.action === 'attendance') {
+      onOpenAttendance?.();
+      return;
+    }
+    if (item.action === 'panel') {
+      onOpenPanel?.(item.panel);
+      return;
+    }
+    setPage(item.page);
+  };
+
   return <div className="suite-app">
     <aside className="suite-sidebar">
       <div className="suite-brand-wrap"><div className="tc-brand-mark" aria-label="Te-connect" /></div>
       <div className="suite-org"><div className="suite-org-icon"><Building2 size={17} /></div><div><strong>{state.company?.name || 'Te-connect'}</strong><span>{profile?.role || 'Utilizador'} · Produção</span></div></div>
       <nav className="suite-nav" aria-label="Navegação principal">
-        {pages.map(([id, label, Icon]) => <button key={id} className={page === id ? 'active' : ''} onClick={() => setPage(id)}><Icon size={17} /><span>{label}</span>{id === 'alerts' && openAlerts.length > 0 && <em>{openAlerts.length}</em>}{id === 'notifications' && unread > 0 && <em>{unread}</em>}</button>)}
+        {navigationGroups.map((group) => (
+          <div key={group.label}>
+            <div className="suite-nav-label">{group.label}</div>
+            {group.items.map((item, index) => {
+              const Icon = item.icon;
+              const active = item.page === page && !item.action;
+              const badge = item.page === 'alerts' ? openAlerts.length : item.page === 'notifications' ? unread : 0;
+              return <button key={group.label + item.label + index} className={active ? 'active' : ''} onClick={() => handleNavigation(item)}><Icon size={17} /><span>{item.label}</span>{badge > 0 && <em>{badge}</em>}</button>;
+            })}
+          </div>
+        ))}
       </nav>
       <div className="suite-sidebar-bottom"><button onClick={() => load()}><RefreshCw size={16} />Sincronizar</button><div style={{ fontSize: 11, opacity: .58, padding: '8px 10px' }}>Dados reais · tenant isolado</div></div>
     </aside>
