@@ -52,8 +52,8 @@ if (missing.length) {
   process.exit(1);
 }
 
-const sourceFiles = required.filter((file) => /\.(jsx?|tsx|mjs)$/.test(file));
-const source = sourceFiles.map((file) => fs.readFileSync(path.join(root, file), 'utf8')).join('\n');
+const clientFiles = required.filter((file) => /^(src\/|public\/)/.test(file) && /\.(jsx?|tsx|mjs|html)$/.test(file));
+const source = clientFiles.map((file) => fs.readFileSync(path.join(root, file), 'utf8')).join('\n');
 const forbidden = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'service_role',
