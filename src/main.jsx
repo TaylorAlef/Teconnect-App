@@ -95,50 +95,103 @@ function StartupError({ error }) {
 }
 
 function NativeLogin({ onSuccess }) {
+  const [mode, setMode] = useState('login');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [accepted, setAccepted] = useState(false);
 
   const submit = async (event) => {
     event.preventDefault();
     if (!supabase) return;
     setBusy(true);
     setError('');
+    setMessage('');
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail.includes('@')) throw new Error('Informe um e-mail válido.');
+      if (mode === 'signup') {
+        if (fullName.trim().length < 2) throw new Error('Informe o seu nome.');
+        if (password.length < 8) throw new Error('A palavra-passe deve ter pelo menos 8 caracteres.');
+        if (!accepted) throw new Error('Aceite os Termos e a Privacidade para criar a conta.');
+
+        const { data, error: authError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+          options: { data: { full_name: fullName.trim(), name: fullName.trim() } },
+        });
+        if (authError) throw authError;
+        if (data.session) {
+          onSuccess(data.session);
+        } else {
+          setMode('login');
+          setMessage('Conta criada. Verifique o seu e-mail para confirmar a conta e depois entre no Te-connect.');
+        }
+        return;
+      }
+
+      if (mode === 'reset') {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
+          redirectTo: window.location.origin,
+        });
+        if (resetError) throw resetError;
+        setMessage('Enviámos as instruções de recuperação para o seu e-mail, caso a conta exista.');
+        setMode('login');
+        return;
+      }
+
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
       if (authError) throw authError;
       onSuccess(data.session || null);
     } catch (loginError) {
-      setError(loginError?.message || 'Não foi possível iniciar sessão.');
+      setError(loginError?.message || 'Não foi possível concluir a operação.');
     } finally {
       setBusy(false);
     }
   };
 
+  const title = mode === 'signup' ? 'Criar conta empresarial' : mode === 'reset' ? 'Recuperar acesso' : 'Acesso corporativo';
+  const subtitle = mode === 'signup'
+    ? 'Crie a conta de administrador e configure a empresa em poucos passos.'
+    : mode === 'reset'
+      ? 'Receba por e-mail um link para recuperar o acesso.'
+      : 'Entre para gerir pessoas, ponto, turnos e operações de RH.';
+
   return (
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: '24px 18px calc(24px + env(safe-area-inset-bottom))', background: 'radial-gradient(circle at 50% 0%, rgba(59,130,246,.14), transparent 42%), #07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <div style={{ width: '100%', maxWidth: 430, padding: 26, borderRadius: 22, border: '1px solid rgba(255,255,255,.1)', background: 'rgba(13,23,40,.96)', boxShadow: '0 24px 70px rgba(0,0,0,.4)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, display: 'grid', placeItems: 'center', background: '#15263f', fontWeight: 800, fontSize: 20 }}>T</div>
-          <div><strong style={{ display: 'block', fontSize: 18 }}>Te-connect</strong><span style={{ color: 'rgba(255,255,255,.55)', fontSize: 12 }}>People OS</span></div>
+    <div className="tc-login-shell">
+      <div className="tc-login-card">
+        <div className="tc-login-brand">
+          <img className="tc-auth-logo" src="/teconnect-logo.svg" alt="Te-connect" />
+          <div><strong>Te-connect</strong><span>People OS para empresas</span></div>
         </div>
-        <h1 style={{ margin: 0, fontSize: 25 }}>Acesso corporativo</h1>
-        <p style={{ color: 'rgba(255,255,255,.62)', lineHeight: 1.55, margin: '10px 0 22px' }}>Entre para gerir pessoas, ponto, turnos e operações de RH.</p>
-        {error && <div style={{ marginBottom: 14, padding: 11, borderRadius: 10, background: 'rgba(239,68,68,.08)', border: '1px solid rgba(239,68,68,.2)', color: '#fecaca', fontSize: 13 }}>{error}</div>}
-        <form onSubmit={submit} style={{ display: 'grid', gap: 14 }}>
-          <label style={{ display: 'grid', gap: 7, color: 'rgba(255,255,255,.72)', fontSize: 13 }}>
-            Email
-            <input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.12)', background: '#091423', color: '#fff', outline: 'none' }} />
-          </label>
-          <label style={{ display: 'grid', gap: 7, color: 'rgba(255,255,255,.72)', fontSize: 13 }}>
-            Palavra-passe
-            <input type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '13px 12px', borderRadius: 11, border: '1px solid rgba(255,255,255,.12)', background: '#091423', color: '#fff', outline: 'none' }} />
-          </label>
-          <button type="submit" disabled={busy} style={{ marginTop: 4, border: 0, borderRadius: 11, padding: '13px 16px', background: '#2563eb', color: '#fff', fontWeight: 700, opacity: busy ? .65 : 1 }}>{busy ? 'A entrar…' : 'Entrar'}</button>
+        <div className="tc-login-kicker">CENTRAL DE RH</div>
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+
+        {error && <div className="tc-login-message error">{error}</div>}
+        {message && <div className="tc-login-message success">{message}</div>}
+
+        <form onSubmit={submit} className="tc-login-form">
+          {mode === 'signup' && <label>Nome completo<input value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" required /></label>}
+          <label>Email<input type="email" inputMode="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></label>
+          {mode !== 'reset' && <label>Palavra-passe<input type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} value={password} onChange={(event) => setPassword(event.target.value)} required /></label>}
+          {mode === 'signup' && <label className="tc-login-check"><input type="checkbox" checked={accepted} onChange={(event) => setAccepted(event.target.checked)} /><span>Aceito os <a href="/terms.html" target="_blank" rel="noreferrer">Termos</a> e a <a href="/privacy.html" target="_blank" rel="noreferrer">Privacidade</a>.</span></label>}
+          <button type="submit" disabled={busy} className="tc-login-submit">{busy ? 'A processar…' : mode === 'signup' ? 'Criar conta e começar' : mode === 'reset' ? 'Enviar recuperação' : 'Entrar'}</button>
         </form>
+
+        <div className="tc-login-links">
+          {mode === 'login' && <><button type="button" onClick={() => { setMode('signup'); setError(''); setMessage(''); }}>Criar nova empresa</button><button type="button" onClick={() => { setMode('reset'); setError(''); setMessage(''); }}>Esqueci a palavra-passe</button></>}
+          {mode !== 'login' && <button type="button" onClick={() => { setMode('login'); setError(''); setMessage(''); }}>Voltar ao acesso</button>}
+        </div>
+
         <div className="tc-auth-privacy">
-          <span>Usamos tecnologias essenciais para sessão, segurança e funcionamento do aplicativo.</span>
+          <span>Conta empresarial, sessão segura e dados separados por organização.</span>
           <span><a href="/privacy.html">Privacidade</a><a href="/terms.html">Termos</a></span>
         </div>
         <div className="tc-auth-footer">Te-connect · People OS para empresas</div>
@@ -181,8 +234,11 @@ function CommercialBridge() {
     }
     const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
     setProfile(nextProfile || null);
-    setNeedsOnboarding(!nextProfile?.company_id);
-    if (!nextProfile) setProfileLoadError(new Error('A conta autenticada não tem um perfil ativo no Te-connect.'));
+    if (!nextProfile) {
+      setNeedsOnboarding(true);
+      return;
+    }
+    setNeedsOnboarding(!nextProfile.company_id);
     if (!nextProfile?.company_id || ![...ADMIN_HR_ROLES, ...MANAGER_ROLES].includes(nextProfile.role)) {
       setBilling(null);
       return;
