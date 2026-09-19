@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#06142F"/><stop offset=".55" stop-color="#0A2F6B"/><stop offset="1" stop-color="#0C74B9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientTransform="translate(990 90) rotate(120) scale(310 360)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#59D7FF" stop-opacity=".5"/><stop offset="1" stop-color="#59D7FF" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" rx="42" fill="url(#bg)"/>
+  <rect width="1200" height="630" rx="42" fill="url(#glow)"/>
+  <g opacity=".16" stroke="#BCEEFF">
+    <path d="M650 0L1200 430"/><path d="M820 0L1200 300"/><path d="M1040 0L1200 160"/>
+  </g>
+  <circle cx="108" cy="150" r="43" fill="#14C5F4"/>
+  <path d="M40 216C40 199.431 53.431 186 70 186H146C162.569 186 176 199.431 176 216V248H40V216Z" fill="#062B72"/>
+  <rect x="75" y="242" width="66" height="230" rx="8" fill="#062B72"/>
+  <text x="215" y="230" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="84" font-weight="800">Te-connect</text>
+  <text x="220" y="286" fill="#A9DFFF" font-family="Arial, Helvetica, sans-serif" font-size="24" font-weight="700" letter-spacing="5">PEOPLE OS</text>
+  <text x="78" y="386" fill="white" font-family="Arial, Helvetica, sans-serif" font-size="54" font-weight="800">Gestão de RH moderna.</text>
+  <text x="80" y="435" fill="#D8E9FF" font-family="Arial, Helvetica, sans-serif" font-size="27">Pessoas · ponto · assiduidade · operações</text>
+  <rect x="80" y="492" width="344" height="58" rx="29" fill="#FFFFFF" fill-opacity=".11" stroke="#BCEEFF" stroke-opacity=".25"/>
+  <text x="110" y="530" fill="#EAF8FF" font-family="Arial, Helvetica, sans-serif" font-size="19" font-weight="700">app.te-connect.com</text>
+</svg>
