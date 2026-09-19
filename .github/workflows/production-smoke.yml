@@ -8,6 +8,10 @@ on:
       - 'index.html'
       - 'public/**'
       - 'src/**'
+      - 'supabase/**'
+      - 'package.json'
+      - 'vite.config.js'
+      - 'wrangler.jsonc'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
