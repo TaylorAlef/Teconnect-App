@@ -534,7 +534,7 @@ function CommercialBridge() {
             {panel === 'roles' && canManageHr && <RoleCenter profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'employee-import' && canManageHr && <EmployeeImportPanel profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'lifecycle' && canManageHr && <LifecycleCenter profile={profile} onClose={() => setPanel(null)} />}
-            {panel === 'billing' && canManageHr && <BillingPage />}
+            {panel === 'billing' && ['COMPANY_ADMIN', 'SUPER_ADMIN'].includes(profile.role) && <BillingPage />}
             {panel === 'super-admin' && profile.role === 'SUPER_ADMIN' && <SuperAdminPage />}
             {panel === 'employee-access' && canManageHr && <EmployeeAccessManager profile={profile} onToast={notify} />}
             {panel === 'payroll' && canManageHr && <PayrollControlCenter profile={profile} onToast={notify} />}
