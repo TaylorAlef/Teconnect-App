@@ -3,6 +3,7 @@ import { AlertTriangle, ArrowRight, Bell, CalendarDays, Check, CheckCircle2, Che
 import { createClient } from '@supabase/supabase-js';
 import { useRealtimeCompany } from './hooks/useRealtimeCompany';
 import { explainGeofenceError, getCurrentPosition, isInsideGeofence } from './lib/geofence';
+import { validateAttendancePunch } from './lib/validation';
 import './teconnect.css';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
@@ -205,7 +206,180 @@ function Overview({ dashboard, activeEmployees, attendanceRate, risk, approvals,
   return <><section className="tc-hero"><div><div className="tc-eyebrow"><Sparkles size={13} /> Executive People Command</div><h1>Painel executivo</h1><p>Operação de RH em tempo real, com decisões e sinais críticos no mesmo fluxo.</p></div><div className="tc-actions"><button className="tc-btn" onClick={onRefresh}><RefreshCw size={15} /> Sincronizar</button><button className="tc-btn primary" onClick={() => onNavigate('tasks')}><Plus size={15} /> Nova tarefa</button></div></section><div className="tc-grid-6">{stats.map(([label, value, Icon, foot]) => <div className="tc-card tc-kpi" key={label}><div className="tc-kpi-top"><span>{label}</span><Icon size={15} /></div><div className="tc-kpi-value">{value}</div><div className="tc-kpi-foot">{foot}</div></div>)}</div><div className="tc-two tc-section"><section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Decisões pendentes</h2><span>{approvals.length} itens</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Alertas <ArrowRight size={13} /></button></div>{approvals.length === 0 ? <div className="tc-empty">A fila está limpa.</div> : <div className="tc-list">{approvals.slice(0, 8).map((item) => <div className="tc-row" key={`${item.kind}-${item.id}`}><div className="tc-row-main"><div className="tc-row-title">{item.employee} · {item.label}</div><div className="tc-row-sub">{item.meta}</div></div><div className="tc-actions"><button className="tc-btn tc-small" onClick={() => onApprove(item, false)}>Rejeitar</button><button className="tc-btn primary tc-small" onClick={() => onApprove(item, true)}><Check size={13} /> Aprovar</button></div></div>)}</div>}</section><section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Alertas preditivos</h2><span>{alerts.length} abertos</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Ver todos</button></div>{alerts.length === 0 ? <div className="tc-empty">Sem alertas críticos neste momento.</div> : alerts.slice(0, 6).map((a) => <div className="tc-alert" key={a.id}><div><div className="tc-alert-title">{a.title}</div><div className="tc-alert-msg">{a.message}</div></div><span className={`tc-badge ${String(a.severity).toLowerCase()}`}>{a.severity}</span></div>)}</section></div><div className="tc-section"><div className="tc-section-head"><div><h2>Fila de tarefas RH</h2><span>{tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED').length} abertas</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('tasks')}>Abrir kanban <ArrowRight size={13} /></button></div></div></>;
 }
 function People({ employees }) { return <><section className="tc-hero"><div><div className="tc-eyebrow"><Users size={13} /> Pessoas</div><h1>Colaboradores</h1><p>Base operacional ligada diretamente ao tenant Supabase.</p></div></section><section className="tc-card tc-card-pad"><table className="tc-table"><thead><tr><th>Colaborador</th><th>Código</th><th>Email</th><th>Admissão</th><th>Estado</th></tr></thead><tbody>{employees.map((e) => <tr key={e.id}><td>{e.full_name}</td><td>{e.employee_code}</td><td>{e.email || '—'}</td><td>{e.hire_date || '—'}</td><td><span className="tc-badge low">{e.status}</span></td></tr>)}</tbody></table>{employees.length === 0 && <div className="tc-empty">Ainda não existem colaboradores neste tenant.</div>}</section></>; }
-function Attendance({ locations, anomalies, notify }) { const [selected, setSelected] = useState(locations[0]?.id || ''); const [busy, setBusy] = useState(false); const [last, setLast] = useState(null); const location = locations.find((l) => l.id === selected); useEffect(() => { if (!selected && locations[0]) setSelected(locations[0].id); }, [locations, selected]); const punch = async (eventType) => { if (!location) { notify('Cadastre uma instalação com coordenadas GPS antes de marcar o ponto.', 'error'); return; } setBusy(true); try { const position = await getCurrentPosition(); const validation = isInsideGeofence(position, location); if (!validation.ok) { notify(`Picagem bloqueada: ${Math.round(validation.distance || 0)} m do local; raio ${validation.radius} m.`, 'error'); setLast({ ok: false, ...validation }); return; } const { latitude, longitude, accuracy } = position.coords; const result = await rpc('register_time_entry', { p_event_type: eventType, p_work_location_id: location.id, p_latitude: latitude, p_longitude: longitude, p_gps_accuracy: accuracy, p_device: navigator.userAgent.slice(0, 160) }); setLast({ ok: true, distance: validation.distance, result }); notify(`${eventType === 'CLOCK_IN' ? 'Entrada' : 'Saída'} registada com validação GPS.`); } catch (error) { console.error(error); notify(explainGeofenceError(error), 'error'); } finally { setBusy(false); } }; return <><section className="tc-hero"><div><div className="tc-eyebrow"><MapPin size={13} /> Ponto & Geofence</div><h1>Marcação segura</h1><p>A validação é feita duas vezes: no dispositivo e no PostgreSQL. Fora do raio, o banco rejeita a operação.</p></div></section><div className="tc-clock"><section className="tc-card tc-clock-card"><label className="tc-form">Instalação<select value={selected} onChange={(e) => setSelected(e.target.value)}>{locations.map((l) => <option key={l.id} value={l.id}>{l.name} · {l.gps_radius_m} m</option>)}</select></label><div className="tc-clock-value">{new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div><div className="tc-actions"><button className="tc-btn primary" disabled={busy} onClick={() => punch('CLOCK_IN')}><CheckCircle2 size={16} /> Entrada</button><button className="tc-btn" disabled={busy} onClick={() => punch('CLOCK_OUT')}><LogOut size={16} /> Saída</button></div>{last && <div className="tc-geofence" style={{ marginTop: 14 }}>{last.ok ? <CheckCircle2 className="tc-ok" size={17} /> : <X className="tc-no" size={17} />} {last.distance != null ? `${Math.round(last.distance)} m do ponto autorizado.` : 'Validação GPS concluída.'}</div>}</section><section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Instalações autorizadas</h2><span>{locations.length} locais ativos</span></div></div>{locations.map((l) => <div className="tc-row" key={l.id}><div className="tc-row-main"><div className="tc-row-title">{l.name}</div><div className="tc-row-sub">{l.address || 'Morada não definida'} · raio {l.gps_radius_m} m</div></div><MapPin size={16} className="tc-muted" /></div>)}{locations.length === 0 && <div className="tc-empty">Sem instalações com GPS configurado.</div>}</section></div><section className="tc-section"><div className="tc-section-head"><div><h2>Sinais recentes</h2><span>atrasos, saídas antecipadas e extras</span></div></div><div className="tc-list">{anomalies.slice(0, 10).map((a) => <div className="tc-row" key={a.id}><div><div className="tc-row-title">{a.work_date}</div><div className="tc-row-sub">{minutes(a.overtime_minutes)} extra · {a.late_minutes || 0} min atraso · {a.early_leave_minutes || 0} min saída antecipada · {a.night_minutes || 0} min noite</div></div><span className={`tc-badge ${(a.late_minutes || a.early_leave_minutes) ? 'high' : 'medium'}`}>{a.status}</span></div>)}</div></section></>; }
+function Attendance({ locations, anomalies, notify }) {
+  const [selected, setSelected] = useState(locations[0]?.id || '');
+  const [busy, setBusy] = useState(false);
+  const [last, setLast] = useState(null);
+  const [clockState, setClockState] = useState(null);
+  const [todayAttendance, setTodayAttendance] = useState(null);
+  const [weekAttendance, setWeekAttendance] = useState([]);
+  const location = locations.find((l) => l.id === selected);
+
+  const refreshClock = useCallback(async () => {
+    try {
+      const state = await rpc('get_my_clock_state', {}, 10000);
+      const nextState = Array.isArray(state) ? state[0] : state;
+      setClockState(nextState || null);
+      const today = await rpc('get_my_today_attendance', {}, 10000);
+      const nextToday = Array.isArray(today) ? today[0] : today;
+      setTodayAttendance(nextToday || null);
+
+      if (nextState?.employee?.id) {
+        const from = new Date();
+        from.setHours(0, 0, 0, 0);
+        from.setDate(from.getDate() - 6);
+        const { data, error } = await withTimeout(
+          supabase
+            .from('attendance_days')
+            .select('work_date,worked_minutes,overtime_minutes,late_minutes,early_leave_minutes,status')
+            .eq('employee_id', nextState.employee.id)
+            .gte('work_date', from.toISOString().slice(0, 10))
+            .order('work_date', { ascending: true }),
+          10000,
+          'assiduidade semanal'
+        );
+        if (!error) setWeekAttendance(data || []);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!selected && locations[0]) setSelected(locations[0].id);
+  }, [locations, selected]);
+
+  useEffect(() => {
+    refreshClock();
+  }, [refreshClock]);
+
+  const punch = async (eventType) => {
+    if (!location) {
+      notify('Cadastre uma instalação com coordenadas GPS antes de marcar o ponto.', 'error');
+      return;
+    }
+    setBusy(true);
+    try {
+      const position = await getCurrentPosition();
+      const validation = isInsideGeofence(position, location);
+      if (!validation.ok) {
+        notify(`Picagem bloqueada: ${Math.round(validation.distance || 0)} m do local; raio ${validation.radius} m.`, 'error');
+        setLast({ ok: false, ...validation });
+        return;
+      }
+
+      const { latitude, longitude, accuracy } = position.coords;
+      const parsed = validateAttendancePunch({
+        eventType,
+        workLocationId: location.id,
+        latitude,
+        longitude,
+        gpsAccuracy: accuracy,
+        device: navigator.userAgent.slice(0, 160),
+      });
+      if (!parsed.ok) {
+        notify(parsed.error, 'error');
+        return;
+      }
+
+      const result = await rpc('register_time_entry', {
+        p_event_type: parsed.data.eventType,
+        p_work_location_id: parsed.data.workLocationId,
+        p_latitude: parsed.data.latitude,
+        p_longitude: parsed.data.longitude,
+        p_gps_accuracy: parsed.data.gpsAccuracy,
+        p_device: parsed.data.device,
+      });
+      setLast({ ok: true, distance: validation.distance, result });
+      notify({
+        CLOCK_IN: 'Entrada registada.',
+        BREAK_START: 'Pausa registada.',
+        BREAK_END: 'Retorno registado.',
+        CLOCK_OUT: 'Saída registada.',
+      }[eventType] + ' Validação GPS concluída.');
+      await refreshClock();
+    } catch (error) {
+      console.error(error);
+      notify(explainGeofenceError(error), 'error');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const state = clockState?.state || 'OFF';
+  const allowed = {
+    CLOCK_IN: state === 'OFF',
+    BREAK_START: state === 'WORKING',
+    BREAK_END: state === 'ON_BREAK',
+    CLOCK_OUT: state === 'WORKING' || state === 'ON_BREAK',
+  };
+
+  const workedToday = Number(todayAttendance?.worked_minutes ?? clockState?.attendance?.worked_minutes ?? 0);
+  const overtimeToday = Number(todayAttendance?.overtime_minutes ?? clockState?.attendance?.overtime_minutes ?? 0);
+  const weeklyWorked = weekAttendance.reduce((sum, row) => sum + Number(row.worked_minutes || 0), 0);
+  const weeklyOvertime = weekAttendance.reduce((sum, row) => sum + Number(row.overtime_minutes || 0), 0);
+
+  return <>
+    <section className="tc-hero">
+      <div>
+        <div className="tc-eyebrow"><MapPin size={13} /> Ponto & Geofence</div>
+        <h1>Assiduidade operacional</h1>
+        <p>Entrada, pausa, retorno e saída com validação GPS no dispositivo e no PostgreSQL.</p>
+      </div>
+    </section>
+
+    <div className="tc-clock">
+      <section className="tc-card tc-clock-card">
+        <label className="tc-form">Instalação
+          <select value={selected} onChange={(e) => setSelected(e.target.value)}>
+            {locations.map((l) => <option key={l.id} value={l.id}>{l.name} · {l.gps_radius_m} m</option>)}
+          </select>
+        </label>
+        <div className="tc-clock-value">{new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })}</div>
+        <div className="tc-clock-state">
+          <span className={`tc-badge ${state === 'WORKING' ? 'low' : state === 'ON_BREAK' ? 'medium' : 'high'}`}>
+            {state === 'WORKING' ? 'A trabalhar' : state === 'ON_BREAK' ? 'Em pausa' : state === 'OFF' ? 'Fora de serviço' : 'Indisponível'}
+          </span>
+          {clockState?.employee?.name && <span className="tc-muted">{clockState.employee.name}</span>}
+        </div>
+        <div className="tc-actions tc-clock-actions">
+          <button className="tc-btn primary tc-clock-action" disabled={busy || !allowed.CLOCK_IN} onClick={() => punch('CLOCK_IN')}><CheckCircle2 size={17} /> Entrada</button>
+          <button className="tc-btn tc-clock-action" disabled={busy || !allowed.BREAK_START} onClick={() => punch('BREAK_START')}><Moon size={17} /> Pausa</button>
+          <button className="tc-btn tc-clock-action" disabled={busy || !allowed.BREAK_END} onClick={() => punch('BREAK_END')}><RefreshCw size={17} /> Retorno</button>
+          <button className="tc-btn tc-clock-action" disabled={busy || !allowed.CLOCK_OUT} onClick={() => punch('CLOCK_OUT')}><LogOut size={17} /> Saída</button>
+        </div>
+        {last && <div className="tc-geofence" style={{ marginTop: 14 }}>
+          {last.ok ? <CheckCircle2 className="tc-ok" size={17} /> : <X className="tc-no" size={17} />}
+          {last.distance != null ? `${Math.round(last.distance)} m do ponto autorizado.` : 'Validação GPS concluída.'}
+        </div>}
+      </section>
+
+      <section className="tc-card tc-card-pad">
+        <div className="tc-section-head"><div><h2>Resumo de horas</h2><span>hoje e últimos 7 dias</span></div></div>
+        <div className="tc-hours-grid">
+          <div><span>Hoje</span><strong>{minutes(workedToday)}</strong></div>
+          <div><span>Extra hoje</span><strong>{minutes(overtimeToday)}</strong></div>
+          <div><span>Semana</span><strong>{minutes(weeklyWorked)}</strong></div>
+          <div><span>Extra semana</span><strong>{minutes(weeklyOvertime)}</strong></div>
+        </div>
+        <div className="tc-section-head" style={{ marginTop: 18 }}><div><h2>Últimos registos</h2><span>{weekAttendance.length} dias</span></div></div>
+        {weekAttendance.length === 0 ? <div className="tc-empty">Sem registos semanais disponíveis para este colaborador.</div> : weekAttendance.slice(-7).map((row) => (
+          <div className="tc-row" key={row.work_date}>
+            <div><div className="tc-row-title">{row.work_date}</div><div className="tc-row-sub">{minutes(row.worked_minutes)} trabalhadas · {minutes(row.overtime_minutes)} extra · {row.late_minutes || 0} min atraso</div></div>
+            <span className="tc-badge low">{row.status || 'OK'}</span>
+          </div>
+        ))}
+      </section>
+    </div>
+
+    <section className="tc-section">
+      <div className="tc-section-head"><div><h2>Sinais recentes</h2><span>atrasos, saídas antecipadas e extras</span></div></div>
+      <div className="tc-list">
+        {anomalies.slice(0, 10).map((a) => <div className="tc-row" key={a.id}><div><div className="tc-row-title">{a.work_date}</div><div className="tc-row-sub">{minutes(a.overtime_minutes)} extra · {a.late_minutes || 0} min atraso · {a.early_leave_minutes || 0} min saída antecipada · {a.night_minutes || 0} min noite</div></div><span className={`tc-badge ${(a.late_minutes || a.early_leave_minutes) ? 'high' : 'medium'}`}>{a.status}</span></div>)}
+      </div>
+    </section>
+  </>;
+}
 function Tasks({ tasks, employees, companyId, userId, notify, onReload }) { const [title, setTitle] = useState(''); const [priority, setPriority] = useState('NORMAL'); const [assignee, setAssignee] = useState(''); const create = async (e) => { e.preventDefault(); if (!title.trim()) return; const { error } = await supabase.from('hr_tasks').insert({ company_id: companyId, title: title.trim(), priority, assignee_id: assignee || null, created_by: userId }); if (error) notify(error.message, 'error'); else { setTitle(''); notify('Tarefa criada.'); onReload(); } }; const setStatus = async (task, status) => { const { error } = await supabase.from('hr_tasks').update({ status }).eq('id', task.id).eq('company_id', companyId); if (error) notify(error.message, 'error'); else { notify('Tarefa atualizada.'); onReload(); } }; const columns = [['PENDING', 'Pendentes'], ['IN_PROGRESS', 'Em andamento'], ['DONE', 'Concluídas']]; return <><section className="tc-hero"><div><div className="tc-eyebrow"><CheckCircle2 size={13} /> Central RH</div><h1>Tarefas</h1><p>Kanban operacional com auditoria automática de alterações de estado.</p></div></section><section className="tc-card tc-card-pad"><form className="tc-actions" onSubmit={create}><input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Ex.: validar documentos de onboarding" style={{ flex: 1, minWidth: 220, background: '#09111d', border: '1px solid rgba(255,255,255,.09)', color: '#fff', borderRadius: 10, padding: 10 }} /><select value={priority} onChange={(e) => setPriority(e.target.value)} className="tc-btn"><option>LOW</option><option>NORMAL</option><option>HIGH</option><option>URGENT</option></select><select value={assignee} onChange={(e) => setAssignee(e.target.value)} className="tc-btn"><option value="">Sem responsável</option>{employees.map((e) => <option key={e.id} value={e.user_id || ''}>{e.full_name}</option>)}</select><button className="tc-btn primary"><Plus size={15} /> Criar</button></form></section><div className="tc-kanban tc-section">{columns.map(([status, label]) => <section className="tc-column" key={status}><h3>{label} · {tasks.filter((t) => t.status === status).length}</h3>{tasks.filter((t) => t.status === status).map((task) => <div className="tc-task" key={task.id}><strong>{task.title}</strong><small>{task.priority} · {task.category}</small>{task.due_at && <small>Prazo: {new Date(task.due_at).toLocaleString('pt-PT')}</small>}<div className="tc-task-actions">{status === 'PENDING' && <button className="tc-btn tc-small" onClick={() => setStatus(task, 'IN_PROGRESS')}>Iniciar</button>}{status === 'IN_PROGRESS' && <button className="tc-btn primary tc-small" onClick={() => setStatus(task, 'DONE')}><Check size={13} /> Concluir</button>}{status === 'DONE' && <span className="tc-muted">Auditado</span>}</div></div>)}</section>)}</div></>; }
 function Alerts({ alerts, employees }) { const map = useMemo(() => new Map(employees.map((e) => [e.id, e.full_name])), [employees]); return <><section className="tc-hero"><div><div className="tc-eyebrow"><AlertTriangle size={13} /> Inteligência</div><h1>Alertas preditivos</h1><p>O motor cruza jornadas, horas, saldo de férias, documentos e padrões de absentismo.</p></div></section><section className="tc-card tc-card-pad">{alerts.length === 0 ? <div className="tc-empty">Nenhum alerta aberto.</div> : alerts.map((a) => <div className="tc-alert" key={a.id}><div style={{ flex: 1 }}><div className="tc-alert-title">{a.title}</div><div className="tc-alert-msg">{a.message}{map.get(a.employee_id) ? ` · ${map.get(a.employee_id)}` : ''}</div></div><div style={{ textAlign: 'right' }}><span className={`tc-badge ${String(a.severity).toLowerCase()}`}>{a.severity}</span><div className="tc-muted" style={{ marginTop: 6 }}>{a.score ?? 0}/100</div></div></div>)}</section></>; }
 function Payroll({ runs }) { return <><section className="tc-hero"><div><div className="tc-eyebrow"><CalendarDays size={13} /> Folha</div><h1>Folha de processamento</h1><p>Estrutura pronta para cálculo, aprovação e exportação sem trazer a complexidade do ERP para a UI.</p></div></section><section className="tc-card tc-card-pad"><table className="tc-table"><thead><tr><th>Período</th><th>Estado</th><th>Colaboradores</th><th>Bruto</th><th>Extra</th><th>Noite</th><th>Líquido</th></tr></thead><tbody>{runs.map((r) => <tr key={r.id}><td>{String(r.period_month).padStart(2, '0')}/{r.period_year}</td><td>{r.status}</td><td>{r.employee_count}</td><td>{money(r.gross_cents)}</td><td>{money(r.overtime_cents)}</td><td>{money(r.night_cents)}</td><td>{money(r.net_cents)}</td></tr>)}</tbody></table>{runs.length === 0 && <div className="tc-empty">Ainda não existem processamentos de folha.</div>}</section></>; }
