@@ -220,9 +220,7 @@ function Attendance({ locations, anomalies, notify }) {
       const state = await rpc('get_my_clock_state', {}, 10000);
       const nextState = Array.isArray(state) ? state[0] : state;
       setClockState(nextState || null);
-      const today = await rpc('get_my_today_attendance', {}, 10000);
-      const nextToday = Array.isArray(today) ? today[0] : today;
-      setTodayAttendance(nextToday || null);
+      setTodayAttendance(nextState?.attendance || null);
 
       if (nextState?.employee?.id) {
         const from = new Date();
