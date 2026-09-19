@@ -473,13 +473,13 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
         </div>
         <div className="tc-hero-copy">
           <div className="tc-hero-brand">Te-connect <span>PEOPLE OS</span></div>
-          <h2>O seu negócio cresce quando as suas <span>pessoas estão conectadas.</span></h2>
-          <p>Mais clareza para o RH. Mais organização para a sua equipa. Mais tempo para fazer a empresa avançar.</p>
+          <h2>Gestão de pessoas que impulsiona <span>o seu futuro.</span></h2>
+          <p>Tecnologia e pessoas trabalhando juntas para um negócio mais forte.</p>
           <small>PESSOAS · PROCESSOS · PRODUTIVIDADE · RESULTADOS</small>
         </div>
         <div className="tc-hero-founder-note">
-          <strong>Uma gestão mais humana começa aqui.</strong>
-          <span>Te-connect · People OS</span>
+          <strong>Pessoas constroem grandes resultados.</strong>
+          <span>TAYLOR COMPANY LTDA · TECNOLOGIA PARA PESSOAS</span>
         </div>
       </div>
     </div>
