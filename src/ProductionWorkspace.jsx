@@ -464,8 +464,23 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
         <p>Aqui tudo se conecta para uma gestão de pessoas mais eficiente.</p>
       </div>
       <div className="tc-dashboard-hero">
-        <div className="tc-hero-art"><div className="tc-hero-glow" /><div className="tc-hero-gridlines" /><div className="tc-hero-person" /></div>
-        <div className="tc-hero-copy"><div className="tc-hero-brand">Te-connect <span>PEOPLE OS</span></div><h2>Pessoas <span>conectam</span> resultados.</h2><p>Tecnologia, dados e pessoas no mesmo lugar.</p><small>GESTÃO · ORGANIZAÇÃO · PRODUTIVIDADE · RESULTADOS</small></div>
+        <div className="tc-hero-art">
+          <div className="tc-hero-glow" />
+          <div className="tc-hero-gridlines" />
+          <div className="tc-hero-photo-wrap">
+            <img className="tc-hero-photo" src="/assets/teconnect-owner-hero.webp" alt="Mensagem do fundador do Te-connect" />
+          </div>
+        </div>
+        <div className="tc-hero-copy">
+          <div className="tc-hero-brand">Te-connect <span>PEOPLE OS</span></div>
+          <h2>O seu negócio cresce quando as suas <span>pessoas estão conectadas.</span></h2>
+          <p>Mais clareza para o RH. Mais organização para a sua equipa. Mais tempo para fazer a empresa avançar.</p>
+          <small>PESSOAS · PROCESSOS · PRODUTIVIDADE · RESULTADOS</small>
+        </div>
+        <div className="tc-hero-founder-note">
+          <strong>Uma gestão mais humana começa aqui.</strong>
+          <span>Te-connect · People OS</span>
+        </div>
       </div>
     </div>
 
