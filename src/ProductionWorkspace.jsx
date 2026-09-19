@@ -406,6 +406,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
         {page === 'payroll' && <Payroll runs={state.payroll} onOpen={() => onOpenPanel?.('payroll')} />}
         {page === 'integrations' && <Integrations jobs={state.integrations} onRefresh={() => load()} />}
         {page === 'notifications' && <Notifications notifications={state.notifications.filter((item) => item.user_id === profile.user_id || canManage)} unread={unread} onRead={markRead} />}
+        <footer className="tc-app-footer"><span>Te-connect · People OS para empresas</span><span><a href="/privacy.html">Privacidade</a><a href="/terms.html">Termos</a><a href="/robots.txt">Robots</a></span></footer>
       </div>
     </main>
 
