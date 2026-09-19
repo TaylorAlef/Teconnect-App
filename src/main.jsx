@@ -136,6 +136,10 @@ function NativeLogin({ onSuccess }) {
           </label>
           <button type="submit" disabled={busy} style={{ marginTop: 4, border: 0, borderRadius: 11, padding: '13px 16px', background: '#2563eb', color: '#fff', fontWeight: 700, opacity: busy ? .65 : 1 }}>{busy ? 'A entrar…' : 'Entrar'}</button>
         </form>
+        <div className="tc-auth-footer">
+          <span>Tecnologias essenciais para sessão e segurança.</span>
+          <span><a href="/privacy.html">Privacidade</a><a href="/terms.html">Termos</a></span>
+        </div>
       </div>
     </div>
   );
