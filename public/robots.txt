@@ -1,0 +1,6 @@
+# Te-connect is an authenticated business application.
+# Keep the application out of public search indexes.
+User-agent: *
+Disallow: /
+
+Sitemap: https://app.te-connect.com/sitemap.xml
