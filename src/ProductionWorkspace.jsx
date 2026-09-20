@@ -450,6 +450,59 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       icon: CalendarCheck, title: 'Férias', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: date(item.start_date)
     })),
   ].slice(0,4);
+  const priorityActions = [
+    expiringDocs.length > 0 ? {
+      id: 'docs',
+      tone: 'warning',
+      icon: FileText,
+      eyebrow: 'CONFORMIDADE',
+      title: `${expiringDocs.length} documento${expiringDocs.length === 1 ? '' : 's'} exige${expiringDocs.length === 1 ? '' : 'm'} atenção`,
+      detail: 'Evite que contratos ou certificados ultrapassem a validade.',
+      action: 'Rever documentos',
+      target: 'documents',
+    } : null,
+    pendingVacations.length > 0 ? {
+      id: 'vacations',
+      tone: 'blue',
+      icon: CalendarCheck,
+      eyebrow: 'APROVAÇÕES',
+      title: `${pendingVacations.length} pedido${pendingVacations.length === 1 ? '' : 's'} de férias pendente${pendingVacations.length === 1 ? '' : 's'}`,
+      detail: 'Resolva pedidos sem trocar de ecrã e mantenha a equipa informada.',
+      action: 'Abrir aprovações',
+      target: 'vacations',
+    } : null,
+    pendingOvertime.length > 0 ? {
+      id: 'overtime',
+      tone: 'blue',
+      icon: Clock3,
+      eyebrow: 'ASSIDUIDADE',
+      title: `${pendingOvertime.length} pedido${pendingOvertime.length === 1 ? '' : 's'} de horas extra por decidir`,
+      detail: 'Valide o impacto antes de fechar o período de trabalho.',
+      action: 'Rever horas extra',
+      target: 'attendance',
+    } : null,
+    failedIntegrations.length > 0 ? {
+      id: 'integrations',
+      tone: 'danger',
+      icon: Zap,
+      eyebrow: 'INTEGRAÇÕES',
+      title: `${failedIntegrations.length} falha${failedIntegrations.length === 1 ? '' : 's'} de integração`,
+      detail: 'Há operações que precisam de intervenção para não ficarem pendentes.',
+      action: 'Ver integrações',
+      target: 'integrations',
+    } : null,
+    state.invitations.filter((item) => item.status === 'PENDING').length > 0 ? {
+      id: 'invites',
+      tone: 'blue',
+      icon: UserPlus,
+      eyebrow: 'ACESSOS',
+      title: `${state.invitations.filter((item) => item.status === 'PENDING').length} convite${state.invitations.filter((item) => item.status === 'PENDING').length === 1 ? '' : 's'} pendente${state.invitations.filter((item) => item.status === 'PENDING').length === 1 ? '' : 's'}`,
+      detail: 'Conclua o acesso dos colaboradores para fechar o ciclo operacional.',
+      action: 'Gerir acessos',
+      target: 'people',
+    } : null,
+  ].filter(Boolean).slice(0, 4);
+
   const alertItems = [
     ...openAlerts.slice(0,3).map((alert) => ({ icon: AlertTriangle, tone: 'danger', title: employeeMap.get(alert.employee_id)?.full_name || alert.title, subtitle: alert.message, when: date(alert.created_at) })),
     ...pendingVacations.slice(0,2).map((item) => ({ icon: CalendarCheck, tone: 'warning', title: 'Pedido de férias', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: date(item.start_date) })),
@@ -488,6 +541,26 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       <DashboardKpi icon={AlertTriangle} label="Atrasos hoje" value={lateToday.length} trend={lateToday.length ? ('+' + lateToday.length) : 'Sem atrasos'} tone="red" onClick={() => onNavigate('attendance')} />
       <DashboardKpi icon={FileText} label="Pendências" value={pendingVacations.length + pendingOvertime.length} trend="● Requerem atenção" tone="blue" onClick={() => onNavigate('vacations')} />
     </div>
+
+    <section className="tc-priority-panel">
+      <div className="tc-priority-head">
+        <div>
+          <div className="tc-dashboard-section-kicker"><Target size={13}/> CENTRO DE AÇÃO</div>
+          <h2>O que merece atenção agora</h2>
+          <span>O Te-connect transforma os sinais do RH em próximos passos claros.</span>
+        </div>
+        <span className="tc-priority-count">{priorityActions.length} ações</span>
+      </div>
+      <div className="tc-priority-grid">
+        {priorityActions.length ? priorityActions.map((item) => {
+          const Icon = item.icon;
+          return <button type="button" className={`tc-priority-card ${item.tone}`} key={item.id} onClick={() => onNavigate(item.target)}>
+            <div className="tc-priority-icon"><Icon size={17}/></div>
+            <div className="tc-priority-copy"><small>{item.eyebrow}</small><strong>{item.title}</strong><span>{item.detail}</span><b>{item.action} <ArrowRight size={13}/></b></div>
+          </button>;
+        }) : <div className="tc-priority-empty"><CheckCircle2 size={19}/><div><strong>Operação sob controlo</strong><span>Não existem pendências prioritárias neste momento.</span></div></div>}
+      </div>
+    </section>
 
     <div className="tc-dashboard-grid">
       <section className="suite-card tc-chart-card">
