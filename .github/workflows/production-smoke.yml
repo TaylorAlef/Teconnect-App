@@ -58,6 +58,16 @@ jobs:
             test "$status" -lt 400
           done
           echo "Production launch infrastructure smoke check passed."
+      - name: Check HD dashboard hero asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /dev/null -w '%{http_code}' "https://app.te-connect.com/assets/teconnect-dashboard-hero.webp")"
+          echo "/assets/teconnect-dashboard-hero.webp -> $status"
+          test "$status" -ge 200
+          test "$status" -lt 400
+          echo "HD dashboard hero asset smoke check passed."
+
       - name: Check public branding assets
         shell: bash
         run: |
