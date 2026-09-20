@@ -1,0 +1,58 @@
+name: TE-Connect Critical E2E
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'supabase/**'
+      - 'tests/e2e/**'
+      - 'playwright.config.ts'
+      - 'package.json'
+      - '.github/workflows/critical-e2e.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  critical-e2e:
+    if: ${{ vars.E2E_ENABLED == 'true' }}
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    env:
+      CI: 'true'
+      E2E_ALLOW_STAGING: 'true'
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+      PLAYWRIGHT_TEST_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+      SUPABASE_STAGING_URL: ${{ secrets.SUPABASE_STAGING_URL }}
+      SUPABASE_STAGING_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_STAGING_PUBLISHABLE_KEY }}
+      SUPABASE_STAGING_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_STAGING_SERVICE_ROLE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run critical E2E
+        run: npm run test:e2e:critical
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v5
+        with:
+          name: teconnect-critical-e2e-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
