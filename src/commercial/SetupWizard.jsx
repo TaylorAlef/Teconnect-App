@@ -42,7 +42,17 @@ export default function SetupWizard({ profile, onClose }) {
     ]);
     const firstError = [companyResult, settingsResult, depResult, posResult, locResult, shiftResult, employeeResult].find((result) => result.error)?.error;
     if (firstError) setMessage(firstError.message || 'Falha ao carregar a configuração.');
-    setCompany(companyResult.data || null); setSettings(settingsResult.data || null); setDepartments(depResult.data || []); setPositions(posResult.data || []); setLocations(locResult.data || []); setShifts(shiftResult.data || []); setEmployees(employeeResult.data || []); setChecklist(settingsResult.data?.setup_checklist || {}); setLoading(false);
+    setCompany(companyResult.data || null); setSettings(settingsResult.data || null); setDepartments(depResult.data || []); setPositions(posResult.data || []); setLocations(locResult.data || []); setShifts(shiftResult.data || []); setEmployees(employeeResult.data || []);
+    const nextChecklist = settingsResult.data?.setup_checklist || {};
+    setChecklist(nextChecklist);
+    const firstIncomplete = !companyResult.data?.name ? 1
+      : !(depResult.data?.length && posResult.data?.length) ? 2
+      : !(locResult.data?.some((item) => Number.isFinite(Number(item.latitude)) && Number.isFinite(Number(item.longitude))) && shiftResult.data?.length) ? 3
+      : !employeeResult.data?.length ? 4
+      : !settingsResult.data?.setup_completed_at ? 5
+      : 5;
+    setStep(firstIncomplete);
+    setLoading(false);
   }, [profile?.company_id]);
   useEffect(() => { load(); }, [load]);
 
@@ -84,7 +94,7 @@ export default function SetupWizard({ profile, onClose }) {
     setSaving(true);
     const { error } = await supabase.rpc('create_work_location', { p_name: name, p_address: locationForm.address.trim() || null, p_latitude: latitude, p_longitude: longitude, p_gps_radius_m: radius });
     setSaving(false);
-    if (error) setMessage(error.message || 'Não foi possível criar o local.'); else { setLocationForm({ name: '', address: '', latitude: '', longitude: '', gps_radius_m: 200 }); await load(); await saveChecklist({ ...checklist, attendance: true }); }
+    if (error) setMessage(error.message || 'Não foi possível criar o local.'); else { setLocationForm({ name: '', address: '', latitude: '', longitude: '', gps_radius_m: 200 }); await saveChecklist({ ...checklist, attendance: true }); }
   };
   const addShift = async () => { if (!shiftForm.name.trim()) return; setSaving(true); const { error } = await supabase.rpc('create_shift', { p_name: shiftForm.name.trim(), p_start_time: shiftForm.start_time, p_end_time: shiftForm.end_time, p_break_minutes: Number(shiftForm.break_minutes), p_tolerance_minutes: Number(shiftForm.tolerance_minutes), p_night_shift: Boolean(shiftForm.night_shift) }); setSaving(false); if (error) setMessage(error.message); else { setShiftForm({ name: '', start_time: '08:30', end_time: '17:30', break_minutes: 60, tolerance_minutes: 5, night_shift: false }); await load(); await saveChecklist({ ...checklist, attendance: true }); } };
 
