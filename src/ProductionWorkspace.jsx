@@ -542,6 +542,28 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       <DashboardKpi icon={FileText} label="Pendências" value={pendingVacations.length + pendingOvertime.length} trend="● Requerem atenção" tone="blue" onClick={() => onNavigate('vacations')} />
     </div>
 
+    <section className="tc-executive-brief">
+      <div className="tc-executive-brief-main">
+        <div className="tc-dashboard-section-kicker"><Sparkles size={13}/> TE-CONNECT DAILY BRIEF</div>
+        <h2>Bom dia. Aqui está o estado da operação.</h2>
+        <p>
+          Hoje existem <strong>{activeCount}</strong> colaboradores ativos. Foram registados <strong>{presentToday.length}</strong> colaboradores com presença,
+          <strong> {lateToday.length}</strong> com atraso e <strong> {pendingVacations.length + pendingOvertime.length}</strong> pedidos a aguardar decisão.
+        </p>
+        <div className="tc-executive-brief-tags">
+          <span><Users size={13}/> {activeCount} ativos</span>
+          <span><Clock3 size={13}/> {presentToday.length} em atividade</span>
+          <span><ShieldCheck size={13}/> {openAlerts.length} alertas abertos</span>
+        </div>
+      </div>
+      <div className="tc-executive-brief-next">
+        <small>PRÓXIMA AÇÃO</small>
+        <strong>{priorityActions[0]?.title || 'Operação sob controlo'}</strong>
+        <span>{priorityActions[0]?.detail || 'Não há pendências prioritárias neste momento.'}</span>
+        {priorityActions[0] && <button type="button" onClick={() => onNavigate(priorityActions[0].target)}>Resolver agora <ArrowRight size={13}/></button>}
+      </div>
+    </section>
+
     <section className="tc-priority-panel">
       <div className="tc-priority-head">
         <div>
