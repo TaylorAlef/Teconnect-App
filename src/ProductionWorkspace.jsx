@@ -461,7 +461,7 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       <div className="tc-dashboard-promo" aria-label="Te-connect People OS">
         <img
           className="tc-dashboard-promo-image"
-          src="/assets/teconnect-dashboard-hero.svg"
+          src="/assets/teconnect-dashboard-hero.webp"
           alt="Te-connect People OS — gestão de pessoas que impulsiona o seu futuro"
           loading="eager"
           decoding="async"
