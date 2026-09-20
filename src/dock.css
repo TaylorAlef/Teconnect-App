@@ -20,3 +20,12 @@
   .tc-dock-menu-grid button,
   .tc-dock-more-panel{transition:none!important;animation:none!important}
 }
+
+/* Desktop: the product chrome duplicates the primary workspace navigation.
+   Keep it available on compact screens where it acts as the mobile quick-action rail. */
+.tc-product-chrome{display:none!important}
+.content,.suite-content{padding-bottom:72px!important}
+@media(max-width:900px){
+  .tc-product-chrome{display:block!important}
+  .content,.suite-content{padding-bottom:112px!important}
+}
