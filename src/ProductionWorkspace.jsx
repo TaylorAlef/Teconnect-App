@@ -450,6 +450,13 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       icon: CalendarCheck, title: 'Férias', subtitle: employeeMap.get(item.employee_id)?.full_name || 'Colaborador', when: date(item.start_date)
     })),
   ].slice(0,4);
+  const operationalSignals = [
+    { label: 'Presença', value: `${attendanceRate.toFixed(0)}%`, detail: lateToday.length ? `${lateToday.length} com atraso hoje` : 'Sem atrasos hoje', tone: lateToday.length ? 'warning' : 'positive', icon: Clock3 },
+    { label: 'Aprovações', value: String(pendingVacations.length + pendingOvertime.length), detail: 'aguardam decisão', tone: (pendingVacations.length + pendingOvertime.length) ? 'warning' : 'positive', icon: CheckCircle2 },
+    { label: 'Conformidade', value: String(expiringDocs.length), detail: expiringDocs.length ? 'documentos a rever' : 'sem vencimentos próximos', tone: expiringDocs.length ? 'warning' : 'positive', icon: ShieldCheck },
+    { label: 'Integrações', value: String(failedIntegrations.length), detail: failedIntegrations.length ? 'falhas pendentes' : 'operação normal', tone: failedIntegrations.length ? 'danger' : 'positive', icon: Zap },
+  ];
+
   const priorityActions = [
     expiringDocs.length > 0 ? {
       id: 'docs',
@@ -595,6 +602,23 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
             <div className="tc-priority-copy"><small>{item.eyebrow}</small><strong>{item.title}</strong><span>{item.detail}</span><b>{item.action} <ArrowRight size={13}/></b></div>
           </button>;
         }) : <div className="tc-priority-empty"><CheckCircle2 size={19}/><div><strong>Operação sob controlo</strong><span>Não existem pendências prioritárias neste momento.</span></div></div>}
+      </div>
+    </section>
+
+    <section className="tc-operational-strip">
+      <div className="tc-operational-intro">
+        <div className="tc-dashboard-section-kicker"><Activity size={13}/> COCKPIT OPERACIONAL</div>
+        <h2>Saiba como a operação está antes de abrir os módulos.</h2>
+        <span>Indicadores calculados diretamente dos dados da sua empresa.</span>
+      </div>
+      <div className="tc-operational-signals">
+        {operationalSignals.map((item) => {
+          const Icon = item.icon;
+          return <div className={`tc-operational-signal ${item.tone}`} key={item.label}>
+            <div className="tc-operational-signal-icon"><Icon size={15}/></div>
+            <div><small>{item.label}</small><strong>{item.value}</strong><span>{item.detail}</span></div>
+          </div>;
+        })}
       </div>
     </section>
 
