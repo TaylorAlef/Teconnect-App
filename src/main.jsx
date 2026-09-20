@@ -51,6 +51,7 @@ import RulesCenter from './company/RulesCenter.jsx';
 import RoleCenter from './security/RoleCenter.jsx';
 import './styles.css';
 import './mobile.css';
+import './dock.css';
 import { initCloudflareWebAnalytics } from './lib/web-analytics.js';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
