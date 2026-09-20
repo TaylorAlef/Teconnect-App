@@ -88,3 +88,13 @@ Recommended repository secrets:
 - `SUPABASE_STAGING_SERVICE_ROLE_KEY`
 
 The suite intentionally fails closed when staging is not explicitly enabled.
+
+## Stripe webhook test
+
+The repository also contains a focused Deno test for the Stripe signature validator:
+
+```bash
+deno test supabase/functions/tests/stripe-webhook-test.ts
+```
+
+It covers a valid signature, multiple `v1` signatures, payload tampering and expired timestamps. The validator now parses the Stripe header defensively instead of assuming a single `v1` value.
