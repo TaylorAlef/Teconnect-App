@@ -195,3 +195,21 @@ html[data-theme="dark"] .suite-main{background:#07101f}.tc-theme-toggle{font-siz
 .tc-priority-empty span{display:block;margin-top:3px;font-size:9px}
 @media(max-width:1100px){.tc-priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.tc-priority-head{align-items:flex-start}.tc-priority-grid{grid-template-columns:1fr}.tc-priority-panel{padding:14px}}
+
+
+.tc-executive-brief{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(280px,.7fr);gap:12px;margin:0 0 14px;padding:18px;border-radius:17px;background:linear-gradient(135deg,#0d213b 0%,#173d69 58%,#22558d 100%);color:#fff;box-shadow:0 16px 38px rgba(20,55,95,.16);overflow:hidden;position:relative}
+.tc-executive-brief:after{content:"";position:absolute;width:280px;height:280px;border-radius:50%;right:-130px;top:-150px;border:1px solid rgba(255,255,255,.10);box-shadow:0 0 0 32px rgba(255,255,255,.025),0 0 0 64px rgba(255,255,255,.018)}
+.tc-executive-brief-main{position:relative;z-index:1}
+.tc-executive-brief .tc-dashboard-section-kicker{color:#9dc6ff}
+.tc-executive-brief h2{margin:6px 0 5px;font-size:19px;line-height:1.2}
+.tc-executive-brief p{margin:0;max-width:780px;color:rgba(255,255,255,.70);font-size:11px;line-height:1.6}
+.tc-executive-brief p strong{color:#fff}
+.tc-executive-brief-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:13px}
+.tc-executive-brief-tags span{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(255,255,255,.055);color:rgba(255,255,255,.78);font-size:9px}
+.tc-executive-brief-next{position:relative;z-index:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center;padding:14px 15px;border:1px solid rgba(255,255,255,.12);border-radius:13px;background:rgba(255,255,255,.055)}
+.tc-executive-brief-next small{color:#9dc6ff;font-size:8px;font-weight:800;letter-spacing:.1em}
+.tc-executive-brief-next strong{margin-top:5px;font-size:12px;line-height:1.35}
+.tc-executive-brief-next span{margin-top:5px;color:rgba(255,255,255,.58);font-size:9px;line-height:1.45}
+.tc-executive-brief-next button{display:inline-flex;align-items:center;justify-content:center;gap:5px;align-self:flex-start;margin-top:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:#fff;color:#173d69;font-size:9px;font-weight:800;cursor:pointer}
+@media(max-width:900px){.tc-executive-brief{grid-template-columns:1fr}}
+@media(max-width:600px){.tc-executive-brief{padding:15px}.tc-executive-brief h2{font-size:17px}}
