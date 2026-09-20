@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Activity, BarChart3, CalendarCheck, Clock3, Download, RefreshCw, TrendingUp, Users, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { downloadTextFile, rowsToCsv } from '../lib/csv.js';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true } });
 const ADMIN = new Set(['SUPER_ADMIN','COMPANY_ADMIN','RH']);
@@ -48,7 +49,19 @@ export default function PeopleAnalyticsCenter({ profile, onClose }) {
   const labels = attendanceByDay.filter((_,i)=>i%Math.max(1,Math.ceil(attendanceByDay.length/7))===0).map(([key])=>date(key));
   const attendanceSeries = attendanceByDay.map(([,value])=>value.present);
 
-  const downloadCsv = () => { const rows=[['Indicador','Valor'],['Colaboradores ativos',active.length],['Presença média',attendance.length?((present.length/attendance.length)*100).toFixed(1)+'%':'0%'],['Registos com atraso',late.length],['Horas extra',`${Math.floor(extraMinutes/60)}h ${extraMinutes%60}m`],['Férias aprovadas (dias)',approvedLeave],['Vagas',jobs.length],['Candidatos',candidates.length]]; const csv=rows.map(r=>r.map(v=>`"${String(v).replaceAll('"','""')}"`).join(';')).join('\n'); const blob=new Blob([`\ufeff${csv}`],{type:'text/csv;charset=utf-8'}); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=`te-connect-people-analytics-${new Date().toISOString().slice(0,10)}.csv`;a.click();URL.revokeObjectURL(url); };
+  const downloadCsv = () => {
+    const headers = ['Indicador','Valor'];
+    const data = [
+      ['Colaboradores ativos', active.length],
+      ['Presença média', attendance.length ? ((present.length / attendance.length) * 100).toFixed(1) + '%' : '0%'],
+      ['Registos com atraso', late.length],
+      ['Horas extra', `${Math.floor(extraMinutes / 60)}h ${extraMinutes % 60}m`],
+      ['Férias aprovadas (dias)', approvedLeave],
+      ['Vagas', jobs.length],
+      ['Candidatos', candidates.length],
+    ];
+    downloadTextFile(`te-connect-people-analytics-${new Date().toISOString().slice(0,10)}.csv`, rowsToCsv(headers, data), 'text/csv;charset=utf-8');
+  };
 
   if(!canManage) return null;
   return <div style={{ position:'fixed',inset:0,zIndex:185,overflow:'auto',background:'#07101f',color:'#fff',padding:24 }}><div style={{maxWidth:1400,margin:'0 auto'}}>
