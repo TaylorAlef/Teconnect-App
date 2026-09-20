@@ -17,7 +17,9 @@
     "mobile:android": "npx cap open android",
     "mobile:ios": "npx cap open ios",
     "check:web-launch": "node scripts/check-web-launch.mjs",
-    "check:saas-contract": "node scripts/check-saas-contract.mjs"
+    "check:saas-contract": "node scripts/check-saas-contract.mjs",
+    "test:e2e": "playwright test",
+    "test:e2e:critical": "playwright test tests/e2e/critical-onboarding-to-attendance.spec.ts"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
@@ -35,6 +37,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "typescript": "^5.9.3",
     "vite": "^6.0.7",
-    "wrangler": "^4.133.0"
+    "wrangler": "^4.133.0",
+    "@playwright/test": "^1.63.0"
   }
 }
