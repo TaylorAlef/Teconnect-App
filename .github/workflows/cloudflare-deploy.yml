@@ -25,9 +25,9 @@ jobs:
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
-            echo "Cloudflare secrets are not configured; deployment is skipped safely."
+            echo "ERROR: Configure CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets before production deployment."
             echo "configured=false" >> "$GITHUB_OUTPUT"
-            exit 0
+            exit 1
           fi
           echo "configured=true" >> "$GITHUB_OUTPUT"
 
@@ -65,7 +65,7 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     needs: deploy
-    if: ${{ needs.deploy.outputs.deployed == 'true' }}
+    if: ${{ needs.deploy.result == 'success' && needs.deploy.outputs.deployed == 'true' }}
     steps:
       - name: Verify Cloudflare production
         shell: bash
