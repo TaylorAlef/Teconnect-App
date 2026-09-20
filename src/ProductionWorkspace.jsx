@@ -457,34 +457,19 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
   ].slice(0,4);
 
   return <>
-    <div className="tc-dashboard-welcome">
-      <div className="tc-dashboard-heading">
-        <div className="suite-eyebrow">TE-CONNECT · CENTRAL DE RH</div>
-        <h1>Bem-vindo, ${((profile?.full_name || 'Administrador').trim().split(/\s+/)[0])}!</h1>
-        <p>Aqui tudo se conecta para uma gestão de pessoas mais eficiente.</p>
-      </div>
-      <div className="tc-dashboard-hero">
-        <div className="tc-hero-art">
-          <div className="tc-hero-glow" />
-          <div className="tc-hero-gridlines" />
-          <div className="tc-hero-photo-wrap">
-            <img className="tc-hero-photo" src="/assets/teconnect-owner-hero.webp" alt="Mensagem do fundador do Te-connect" />
-          </div>
-        </div>
-        <div className="tc-hero-copy">
-          <div className="tc-hero-brand">Te-connect <span>PEOPLE OS</span></div>
-          <h2>Gestão de pessoas que impulsiona <span>o seu futuro.</span></h2>
-          <p>Tecnologia e pessoas trabalhando juntas para um negócio mais forte.</p>
-          <small>PESSOAS · PROCESSOS · PRODUTIVIDADE · RESULTADOS</small>
-        </div>
-        <div className="tc-hero-founder-note">
-          <strong>Pessoas constroem grandes resultados.</strong>
-          <span>TAYLOR COMPANY LTDA · TECNOLOGIA PARA PESSOAS</span>
-        </div>
+    <div className="tc-dashboard-welcome tc-dashboard-welcome-pro">
+      <div className="tc-dashboard-promo" aria-label="Te-connect People OS">
+        <img
+          className="tc-dashboard-promo-image"
+          src="/assets/teconnect-dashboard-hero.webp"
+          alt="Te-connect People OS — gestão de pessoas que impulsiona o seu futuro"
+          loading="eager"
+          decoding="async"
+        />
       </div>
     </div>
 
-    <div className="tc-kpi-row">
+
       <DashboardKpi icon={Users} label="Colaboradores ativos" value={activeCount} trend="Base atual" tone="blue" onClick={() => onNavigate('people')} />
       <DashboardKpi icon={Clock3} label="A trabalhar agora" value={presentToday.length} trend="● Em atividade" tone="green" onClick={onOpenAttendance} />
       <DashboardKpi icon={AlertTriangle} label="Atrasos hoje" value={lateToday.length} trend={lateToday.length ? ('+' + lateToday.length) : 'Sem atrasos'} tone="red" onClick={() => onNavigate('attendance')} />
