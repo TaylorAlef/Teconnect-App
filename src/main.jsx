@@ -25,7 +25,6 @@ import { createRoot } from 'react-dom/client';
 import { createClient } from '@supabase/supabase-js';
 import TeconnectSuite from './TeconnectSuite.jsx';
 import ProductionWorkspace from './ProductionWorkspace.jsx';
-import EnterpriseCommandCenter from './EnterpriseCommandCenter.jsx';
 import AttendanceWorkspace from './attendance/AttendanceWorkspace.jsx';
 import AuditCenter from './audit/AuditCenter.jsx';
 import EmployeeAccessManager from './commercial/EmployeeAccessManager.jsx';
@@ -424,7 +423,6 @@ function CommercialBridge() {
           onOpenBilling={() => openPanel('billing')}
         />
       )}
-      {!isDemoMode && <EnterpriseCommandCenter profile={profile} billing={billing} />}
 
       <nav className={`tc-product-chrome${moreOpen ? ' is-open' : ''}`} aria-label="Navegação do Te-connect">
         <div className="tc-dock-shell">
@@ -487,7 +485,7 @@ function CommercialBridge() {
               {canManageHr && <button type="button" onClick={() => openPanel('performance')}><Award size={16} /><span><strong>Performance</strong><small>Objetivos e PDI</small></span></button>}
               {canManageHr && <button type="button" onClick={() => openPanel('exceptions')}><AlertTriangle size={16} /><span><strong>Exceções</strong><small>Pendências e riscos</small></span></button>}
               {canManageHr && <button type="button" onClick={() => openPanel('analytics')}><Activity size={16} /><span><strong>Analytics</strong><small>Indicadores de pessoas</small></span></button>}
-              {canManageHr && <button type="button" onClick={() => openPanel('integrations')}><Link2 size={16} /><span><strong>API</strong><small>Integrações e webhooks</small></span></button>}
+              {canManageHr && <button type="button" onClick={() => openPanel('integrations')}><Link2 size={16} /><span><strong>API & Webhooks</strong><small>Chaves e integrações</small></span></button>}
               {canManageHr && <button type="button" onClick={() => openPanel('roles')}><UserCog size={16} /><span><strong>Papéis</strong><small>Funções e acessos</small></span></button>}
               {canManageHr && <button type="button" onClick={() => openPanel('employee-import')}><FileUp size={16} /><span><strong>Importar</strong><small>Equipa por CSV</small></span></button>}
               {canManageHr && <button type="button" onClick={() => openPanel('lifecycle')}><LogOut size={16} /><span><strong>Offboarding</strong><small>Saídas e checklist</small></span></button>}
