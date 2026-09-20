@@ -1,4 +1,4 @@
-import { test, expect, type BrowserContext, type Page } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { createHmac } from 'node:crypto';
 import {
   ADMIN_ACCOUNT,
@@ -17,7 +17,6 @@ import {
   getAttendanceDay,
   setKnownPassword,
   signInAsEmployee,
-  supabaseAdmin,
   waitForUserByEmail,
 } from './support/supabase-admin';
 
