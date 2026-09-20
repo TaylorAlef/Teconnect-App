@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 const ADMIN_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
 
@@ -27,6 +27,7 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const preparingRef = useRef(false);
 
   const prepare = useCallback(async () => {
     if (!supabase || !profile || !ADMIN_ROLES.has(profile.role)) {
@@ -34,6 +35,8 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
       return;
     }
 
+    if (preparingRef.current) return;
+    preparingRef.current = true;
     setBusy(true);
     setError('');
 
@@ -76,6 +79,7 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
       setError(e?.message || 'Não foi possível preparar a autenticação multifator.');
       setState('error');
     } finally {
+      preparingRef.current = false;
       setBusy(false);
     }
   }, [onVerified, profile, supabase]);
