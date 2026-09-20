@@ -542,7 +542,7 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       </div>
     </div>
 
-    <div className="tc-dashboard-kpis" data-build-fix="jsx-20260920">
+    <div className="tc-dashboard-kpis">
       <DashboardKpi icon={Users} label="Colaboradores ativos" value={activeCount} trend="Base atual" tone="blue" onClick={() => onNavigate('people')} />
       <DashboardKpi icon={Clock3} label="A trabalhar agora" value={presentToday.length} trend="● Em atividade" tone="green" onClick={onOpenAttendance} />
       <DashboardKpi icon={AlertTriangle} label="Atrasos hoje" value={lateToday.length} trend={lateToday.length ? ('+' + lateToday.length) : 'Sem atrasos'} tone="red" onClick={() => onNavigate('attendance')} />
