@@ -170,3 +170,28 @@ html[data-theme="dark"] .suite-main{background:#07101f}.tc-theme-toggle{font-siz
   .tc-dashboard-welcome-copy h2{font-size:18px}
   .tc-dashboard-welcome-stats{gap:5px}
 }
+
+
+/* Executive action center — turns HR signals into next actions */
+.tc-priority-panel{margin:0 0 14px;padding:18px;border:1px solid #dfe7f1;border-radius:17px;background:#fff;box-shadow:0 10px 28px rgba(20,50,95,.035)}
+.tc-priority-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:13px}
+.tc-dashboard-section-kicker{display:flex;align-items:center;gap:6px;color:#54708f;font-size:9px;font-weight:800;letter-spacing:.12em}
+.tc-priority-head h2{margin:5px 0 3px;font-size:18px;line-height:1.2;color:#13233b}
+.tc-priority-head span:not(.tc-priority-count){color:#718198;font-size:11px}
+.tc-priority-count{padding:6px 9px;border:1px solid #e2eaf3;border-radius:999px;color:#52667f;background:#f7faff;font-size:10px;font-weight:800;white-space:nowrap}
+.tc-priority-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.tc-priority-card{display:flex;align-items:flex-start;gap:10px;text-align:left;min-width:0;padding:13px;border:1px solid #e3eaf3;border-radius:13px;background:#f9fbfe;color:#172840;cursor:pointer;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.tc-priority-card:hover{transform:translateY(-1px);border-color:#c8d7e8;box-shadow:0 8px 20px rgba(24,56,94,.07)}
+.tc-priority-icon{width:32px;height:32px;flex:0 0 32px;display:grid;place-items:center;border-radius:9px;background:#eaf2ff;color:#2767c9}
+.tc-priority-card.warning .tc-priority-icon{background:#fff6df;color:#a66b00}
+.tc-priority-card.danger .tc-priority-icon{background:#ffedf0;color:#c53e57}
+.tc-priority-copy{min-width:0}
+.tc-priority-copy small{display:block;color:#718198;font-size:8px;font-weight:800;letter-spacing:.09em}
+.tc-priority-copy strong{display:block;margin-top:4px;font-size:11px;line-height:1.35}
+.tc-priority-copy span{display:block;margin-top:5px;color:#718198;font-size:9px;line-height:1.45}
+.tc-priority-copy b{display:flex;align-items:center;gap:4px;margin-top:9px;color:#2867c8;font-size:9px}
+.tc-priority-empty{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:16px;border:1px dashed #cdd9e7;border-radius:12px;background:#f8fbff;color:#52708f}
+.tc-priority-empty strong{display:block;color:#19304c;font-size:11px}
+.tc-priority-empty span{display:block;margin-top:3px;font-size:9px}
+@media(max-width:1100px){.tc-priority-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.tc-priority-head{align-items:flex-start}.tc-priority-grid{grid-template-columns:1fr}.tc-priority-panel{padding:14px}}
