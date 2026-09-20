@@ -7,25 +7,22 @@ security definer
 set search_path = ''
 as $$
 declare
-  request_jwt jsonb;
   request_path text;
   caller_id uuid;
   caller_role text;
+  caller_aal text;
 begin
-  request_jwt := coalesce(nullif(current_setting('request.jwt', true), ''), '{}')::jsonb;
-
-  if coalesce(request_jwt ->> 'role', '') <> 'authenticated' then
+  if coalesce(auth.role(), '') <> 'authenticated' then
     return;
   end if;
 
-  caller_id := nullif(request_jwt ->> 'sub', '')::uuid;
   request_path := coalesce(current_setting('request.path', true), '');
-
-  -- The application must be able to read its own role once at AAL1
-  -- so it can present the MFA enrollment/challenge screen.
-  if request_path = 'rpc/get_my_profile' then
+  if position('get_my_profile' in request_path) > 0 then
     return;
   end if;
+
+  caller_id := auth.uid();
+  caller_aal := coalesce(auth.jwt() ->> 'aal', 'aal1');
 
   select p.role
     into caller_role
@@ -34,7 +31,7 @@ begin
   limit 1;
 
   if caller_role in ('SUPER_ADMIN', 'COMPANY_ADMIN', 'RH')
-     and coalesce(request_jwt ->> 'aal', 'aal1') <> 'aal2' then
+     and caller_aal <> 'aal2' then
     raise sqlstate 'PGRST' using
       message = json_build_object(
         'code', 'MFA_REQUIRED',
@@ -50,9 +47,9 @@ begin
 end;
 $$;
 
-revoke execute on function private.teconnect_admin_mfa_pre_request() from public, anon, authenticated;
+revoke execute on function private.teconnect_admin_mfa_pre_request() from public;
 grant usage on schema private to authenticator;
-grant execute on function private.teconnect_admin_mfa_pre_request() to authenticator;
+grant execute on function private.teconnect_admin_mfa_pre_request() to anon, authenticated, authenticator;
 
 alter role authenticator
   set pgrst.db_pre_request = 'private.teconnect_admin_mfa_pre_request';
