@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Download, History, Loader2, RefreshCw, ShieldCheck, X } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import '../teconnect.css';
+import { downloadTextFile, rowsToCsv } from '../lib/csv.js';
 
 const supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true },
@@ -34,15 +35,18 @@ export default function AuditCenter({ profile, onToast }) {
 
   const exportCsv = () => {
     const headers = ['Data','Ação','Entidade','ID','Utilizador'];
-    const escape = (value) => `"${String(value ?? '').replaceAll('"','""')}"`;
-    const lines = rows.map((row) => [row.created_at, row.action, row.entity, row.entity_id, row.actor_name || row.actor_id || 'Sistema'].map(escape).join(','));
-    const blob = new Blob([[headers.map(escape).join(','), ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `teconnect-auditoria-${new Date().toISOString().slice(0,10)}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+    const data = rows.map((row) => [
+      row.created_at,
+      row.action,
+      row.entity,
+      row.entity_id,
+      row.actor_name || row.actor_id || 'Sistema',
+    ]);
+    downloadTextFile(
+      `teconnect-auditoria-${new Date().toISOString().slice(0,10)}.csv`,
+      rowsToCsv(headers, data),
+      'text/csv;charset=utf-8',
+    );
   };
 
   return <>
