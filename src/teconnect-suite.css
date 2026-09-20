@@ -82,3 +82,17 @@ html[data-theme="dark"] .suite-main{background:#07101f}.tc-theme-toggle{font-siz
   .tc-hero-photo-wrap{right:14px;bottom:14px;width:110px;height:108px;border-radius:22px}
   .tc-hero-founder-note{left:22px;right:150px;bottom:22px;text-align:left;max-width:none}
 }
+
+
+/* Te-connect premium dashboard hero */
+.tc-dashboard-welcome.tc-dashboard-welcome-pro{display:block;width:100%;margin-bottom:20px}
+.tc-dashboard-promo{position:relative;width:100%;border-radius:20px;overflow:hidden;background:#eef4fb;border:1px solid #dbe5f2;box-shadow:0 18px 46px rgba(22,55,98,.10)}
+.tc-dashboard-promo-image{display:block;width:100%;height:auto;max-width:100%;aspect-ratio:2062/763;object-fit:cover;object-position:center;image-rendering:auto}
+@media(max-width:900px){
+  .tc-dashboard-promo{border-radius:16px}
+  .tc-dashboard-promo-image{aspect-ratio:2062/900;object-position:center}
+}
+@media(max-width:600px){
+  .tc-dashboard-promo{border-radius:14px}
+  .tc-dashboard-promo-image{aspect-ratio:1.35/1;object-position:60% center}
+}
