@@ -41,6 +41,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Test Stripe webhook signature helper
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+
+      - name: Run webhook unit test
+        run: deno test supabase/functions/tests/stripe-webhook-test.ts
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
