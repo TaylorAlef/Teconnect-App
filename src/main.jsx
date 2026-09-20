@@ -251,6 +251,7 @@ function CommercialBridge() {
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [mfaReady, setMfaReady] = useState(false);
   const isDemoMode = useMemo(() => import.meta.env.VITE_ENABLE_DEMO === 'true' && new URLSearchParams(window.location.search).get('demo') === '1', []);
+  const markMfaReady = useCallback(() => setMfaReady(true), []);
 
   const loadCommercial = useCallback(async (activeSession) => {
     setProfileLoadError(null);
@@ -393,7 +394,7 @@ function CommercialBridge() {
   }
   if (!profile) return null;
   if (ADMIN_HR_ROLES.has(profile.role) && !mfaReady) {
-    return <AdminMfaGate supabase={supabase} profile={profile} onVerified={() => setMfaReady(true)} />;
+    return <AdminMfaGate supabase={supabase} profile={profile} onVerified={markMfaReady} />;
   }
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
 
