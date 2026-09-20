@@ -25,7 +25,7 @@ Never point these variables at the production project:
 
 The runner has a hard stop for the known production project ref `kegmysndcrytlsuclhsq` and also requires `E2E_ALLOW_STAGING=true`.
 
-The service-role key is used only by the Node test runner for controlled test setup/verification. It is never injected into the browser. Supabase documents admin user operations such as `updateUserById` as server-only operations; the secret key must never be exposed in a browser. citeturn3search0turn3search5
+The service-role key is used only by the Node test runner for controlled test setup/verification. It is never injected into the browser. Supabase documents admin user operations such as `updateUserById` as server-only operations; the secret key must never be exposed in a browser.
 
 ## Local run
 
@@ -52,7 +52,7 @@ Then:
 npm run test:e2e:critical
 ```
 
-Playwright supports context-level geolocation and permissions, which is what this suite uses to move the browser between the negative and positive GPS positions. citeturn0search0turn0search1
+Playwright supports context-level geolocation and permissions, which is what this suite uses to move the browser between the negative and positive GPS positions.
 
 ## Invitation email
 
@@ -62,7 +62,7 @@ The UI still calls the production-equivalent `invite-employee` Edge Function. Th
 - sets a known test password;
 - then the employee logs in through the normal TE-Connect login screen.
 
-This verifies the backend invitation/linking path without making the E2E suite depend on an external email provider. The invitation itself remains the same Auth Admin invitation flow used by the application. citeturn3search1turn3search5
+This verifies the backend invitation/linking path without making the E2E suite depend on an external email provider. The invitation itself remains the same Auth Admin invitation flow used by the application.
 
 ## MFA
 
@@ -74,7 +74,7 @@ That keeps the commercial E2E representative of the current administrative login
 
 The GitHub Actions workflow runs this suite only when the staging secrets are available. It installs Chromium and its Linux dependencies, runs with one worker, and uploads the Playwright HTML report and failure traces.
 
-Playwright recommends installing browsers/dependencies in CI and using a single worker when stability and reproducibility are the priority. citeturn1search0turn1search4
+Playwright recommends installing browsers/dependencies in CI and using a single worker when stability and reproducibility are the priority.
 
 ## Safety
 
