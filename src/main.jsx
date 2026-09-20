@@ -378,10 +378,6 @@ function CommercialBridge() {
   }} />;
   if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (!session) return <NativeLogin onSuccess={(nextSession) => { setMfaReady(false); setSession(nextSession); }} />;
-  if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
-  if (ADMIN_HR_ROLES.has(profile?.role) && !mfaReady) {
-    return <AdminMfaGate supabase={supabase} profile={profile} onVerified={() => setMfaReady(true)} />;
-  }
   if (!profile && profileLoadError) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f4f7fb', color: '#10223f', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -396,6 +392,10 @@ function CommercialBridge() {
     );
   }
   if (!profile) return null;
+  if (ADMIN_HR_ROLES.has(profile.role) && !mfaReady) {
+    return <AdminMfaGate supabase={supabase} profile={profile} onVerified={() => setMfaReady(true)} />;
+  }
+  if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
 
   const canManageHr = ADMIN_HR_ROLES.has(profile.role);
   const canApprove = canManageHr || MANAGER_ROLES.has(profile.role);
