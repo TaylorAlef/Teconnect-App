@@ -48,6 +48,7 @@ import PrivacyCenter from './security/PrivacyCenter.jsx';
 import IntegrationsCenter from './integrations/IntegrationsCenter.jsx';
 import RulesCenter from './company/RulesCenter.jsx';
 import RoleCenter from './security/RoleCenter.jsx';
+import AdminMfaGate from './security/AdminMfaGate.jsx';
 import './styles.css';
 import './mobile.css';
 import './dock.css';
@@ -248,6 +249,7 @@ function CommercialBridge() {
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
   const [authLoading, setAuthLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
+  const [mfaReady, setMfaReady] = useState(false);
   const isDemoMode = useMemo(() => import.meta.env.VITE_ENABLE_DEMO === 'true' && new URLSearchParams(window.location.search).get('demo') === '1', []);
 
   const loadCommercial = useCallback(async (activeSession) => {
@@ -328,7 +330,11 @@ function CommercialBridge() {
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
-      if (event === 'SIGNED_OUT') setRecoveryMode(false);
+      if (event === 'SIGNED_OUT') {
+        setRecoveryMode(false);
+        setMfaReady(false);
+      }
+      if (event === 'SIGNED_IN') setMfaReady(false);
       setSession(nextSession || null);
       loadCommercial(nextSession || null).catch(console.error);
       if (!nextSession) {
@@ -371,8 +377,11 @@ function CommercialBridge() {
     await supabase.auth.signOut();
   }} />;
   if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
-  if (!session) return <NativeLogin onSuccess={(nextSession) => setSession(nextSession)} />;
+  if (!session) return <NativeLogin onSuccess={(nextSession) => { setMfaReady(false); setSession(nextSession); }} />;
   if (needsOnboarding) return <OnboardingPage onComplete={() => window.location.reload()} />;
+  if (ADMIN_HR_ROLES.has(profile?.role) && !mfaReady) {
+    return <AdminMfaGate supabase={supabase} profile={profile} onVerified={() => setMfaReady(true)} />;
+  }
   if (!profile && profileLoadError) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f4f7fb', color: '#10223f', fontFamily: 'Inter, system-ui, sans-serif' }}>
