@@ -585,6 +585,25 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       <button type="button" className="tc-pulse-action" onClick={() => onOpenPanel?.('analytics')}>Abrir Intelligence Center <ArrowRight size={15}/></button>
     </section>
 
+    <section className="tc-executive-summary">
+      <div className="tc-executive-summary-main">
+        <div className="tc-dashboard-section-kicker"><Sparkles size={13}/> RESUMO EXECUTIVO</div>
+        <h2>{openAlerts.length || pendingVacations.length || pendingOvertime.length || failedIntegrations.length ? 'Há sinais que merecem uma decisão hoje.' : 'A operação está sob controlo.'}</h2>
+        <p>{openAlerts.length
+          ? `${openAlerts.length} alerta${openAlerts.length === 1 ? '' : 's'} ativo${openAlerts.length === 1 ? '' : 's'}${pendingVacations.length ? `, ${pendingVacations.length} pedido${pendingVacations.length === 1 ? '' : 's'} de férias aguardam decisão` : ''}.`
+          : pendingVacations.length
+            ? `${pendingVacations.length} pedido${pendingVacations.length === 1 ? '' : 's'} de férias aguarda${pendingVacations.length === 1 ? '' : 'm'} decisão.`
+            : pendingOvertime.length
+              ? `${pendingOvertime.length} pedido${pendingOvertime.length === 1 ? '' : 's'} de horas extra precisa${pendingOvertime.length === 1 ? '' : 'm'} de validação.`
+              : 'Não existem pendências prioritárias identificadas pelos módulos operacionais.'}</p>
+      </div>
+      <div className="tc-executive-summary-metrics">
+        <div><span>Presença</span><strong>{attendanceRate.toFixed(0)}%</strong><small>hoje</small></div>
+        <div><span>Atenção</span><strong>{openAlerts.length}</strong><small>alertas</small></div>
+        <div><span>Decisões</span><strong>{pendingVacations.length + pendingOvertime.length}</strong><small>pendentes</small></div>
+      </div>
+    </section>
+
     <section className="tc-priority-panel">
       <div className="tc-priority-head">
         <div>
