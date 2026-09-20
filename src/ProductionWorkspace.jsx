@@ -564,6 +564,20 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       </div>
     </section>
 
+    <section className="tc-pulse-panel">
+      <div className="tc-pulse-score">
+        <div className="tc-pulse-ring"><strong>{Math.round(Math.max(0, Math.min(100, attendanceRate - (openAlerts.length * 4) - (pendingVacations.length * 2) - (failedIntegrations.length * 5))))}</strong><span>/100</span></div>
+        <div><small>TE-CONNECT PULSE</small><h2>Saúde operacional</h2><p>Um resumo executivo calculado a partir da operação real da empresa.</p></div>
+      </div>
+      <div className="tc-pulse-signals">
+        <div><span>Assiduidade</span><strong>{attendanceRate.toFixed(0)}%</strong><small>presença</small></div>
+        <div><span>Exceções</span><strong>{openAlerts.length}</strong><small>em aberto</small></div>
+        <div><span>Aprovações</span><strong>{pendingVacations.length + pendingOvertime.length}</strong><small>pendentes</small></div>
+        <div><span>Conformidade</span><strong>{expiringDocs.length}</strong><small>a rever</small></div>
+      </div>
+      <button type="button" className="tc-pulse-action" onClick={() => onOpenPanel?.('analytics')}>Abrir Intelligence Center <ArrowRight size={15}/></button>
+    </section>
+
     <section className="tc-priority-panel">
       <div className="tc-priority-head">
         <div>
