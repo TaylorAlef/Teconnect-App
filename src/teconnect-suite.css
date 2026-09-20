@@ -213,3 +213,17 @@ html[data-theme="dark"] .suite-main{background:#07101f}.tc-theme-toggle{font-siz
 .tc-executive-brief-next button{display:inline-flex;align-items:center;justify-content:center;gap:5px;align-self:flex-start;margin-top:10px;padding:7px 10px;border:1px solid rgba(255,255,255,.16);border-radius:8px;background:#fff;color:#173d69;font-size:9px;font-weight:800;cursor:pointer}
 @media(max-width:900px){.tc-executive-brief{grid-template-columns:1fr}}
 @media(max-width:600px){.tc-executive-brief{padding:15px}.tc-executive-brief h2{font-size:17px}}
+
+
+.tc-pulse-panel{display:grid;grid-template-columns:1.25fr 1fr auto;align-items:center;gap:18px;margin:0 0 14px;padding:16px 18px;border-radius:17px;background:linear-gradient(120deg,#102746,#173d6c);color:#fff;box-shadow:0 12px 30px rgba(20,53,94,.16)}
+.tc-pulse-score{display:flex;align-items:center;gap:13px}
+.tc-pulse-ring{width:64px;height:64px;flex:0 0 64px;border-radius:50%;display:grid;place-items:center;border:5px solid rgba(255,255,255,.16);box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
+.tc-pulse-ring strong{font-size:20px;line-height:1}.tc-pulse-ring span{display:none}
+.tc-pulse-score small{font-size:8px;letter-spacing:.13em;font-weight:800;color:#8fc0ff}.tc-pulse-score h2{margin:4px 0 2px;font-size:15px}.tc-pulse-score p{margin:0;color:rgba(255,255,255,.56);font-size:9px;line-height:1.4}
+.tc-pulse-signals{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tc-pulse-signals div{padding:8px 9px;border:1px solid rgba(255,255,255,.09);border-radius:10px;background:rgba(255,255,255,.035)}
+.tc-pulse-signals span,.tc-pulse-signals small{display:block;color:rgba(255,255,255,.45);font-size:7px}.tc-pulse-signals strong{display:block;margin:3px 0;font-size:15px}
+.tc-pulse-action{display:flex;align-items:center;gap:7px;border:1px solid rgba(255,255,255,.14);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.06);color:#fff;font-size:9px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tc-pulse-action:hover{background:rgba(255,255,255,.1)}
+@media(max-width:1050px){.tc-pulse-panel{grid-template-columns:1fr}.tc-pulse-action{justify-self:start}}
+@media(max-width:600px){.tc-pulse-signals{grid-template-columns:repeat(2,1fr)}.tc-pulse-panel{padding:14px}.tc-pulse-action{width:100%;justify-content:center}}
