@@ -69,7 +69,47 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
         factorType: 'totp',
         friendlyName: 'Te-connect Admin',
       });
-      if (enrollment.error) throw enrollment.error;
+
+      if (enrollment.error) {
+        // Supabase can retain a factor created by a previous interrupted
+        // enrollment. Re-read the factor list instead of trying to create
+        // another factor with the same friendly name.
+        const retryFactors = await supabase.auth.mfa.listFactors();
+        if (retryFactors.error) throw enrollment.error;
+
+        const existingVerified = (retryFactors.data?.totp || []).find(
+          (factor) => factor.status === 'verified'
+        );
+        if (existingVerified) {
+          setFactorId(existingVerified.id);
+          setState('challenge');
+          return;
+        }
+
+        const existingPending = (retryFactors.data?.totp || []).find(
+          (factor) => factor.status === 'unverified'
+        );
+        if (existingPending) {
+          const { error: cleanupError } = await supabase.auth.mfa.unenroll({
+            factorId: existingPending.id,
+          });
+          if (cleanupError) throw cleanupError;
+
+          const retryEnrollment = await supabase.auth.mfa.enroll({
+            factorType: 'totp',
+            friendlyName: 'Te-connect Admin',
+          });
+          if (retryEnrollment.error) throw retryEnrollment.error;
+
+          setFactorId(retryEnrollment.data.id);
+          setQrCode(retryEnrollment.data?.totp?.qr_code || '');
+          setSecret(retryEnrollment.data?.totp?.secret || '');
+          setState('enroll');
+          return;
+        }
+
+        throw enrollment.error;
+      }
 
       setFactorId(enrollment.data.id);
       setQrCode(enrollment.data?.totp?.qr_code || '');
