@@ -202,8 +202,90 @@ function Loading({ label = 'A sincronizar o Teconnect…' }) { return <div class
 function ProfileError({ message, onRetry, onSignOut }) { return <div className="tc-loading"><div className="tc-card" style={{ padding: 24, maxWidth: 460 }}><div className="tc-brand-mark" style={{ margin: '0 auto 12px' }}>T</div><strong>Não foi possível carregar a organização</strong><p className="tc-muted" style={{ marginTop: 10, lineHeight: 1.5 }}>{message}</p><div className="tc-actions" style={{ justifyContent: 'center', marginTop: 16 }}><button className="tc-btn primary" onClick={onRetry}>Tentar novamente</button><button className="tc-btn" onClick={onSignOut}>Terminar sessão</button></div></div></div>; }
 
 function Overview({ dashboard, activeEmployees, attendanceRate, risk, approvals, alerts, tasks, onApprove, onNavigate, onRefresh }) {
-  const stats = [['Headcount ativo', activeEmployees, Users, 'colaboradores'], ['Assiduidade', `${attendanceRate.toFixed(1)}%`, Clock3, 'hoje'], ['Horas extra', minutes(dashboard?.overtime_minutes_week), Zap, 'últimos 7 dias'], ['Horas noturnas', minutes(dashboard?.night_minutes_week), Moon, 'últimos 7 dias'], ['Férias disponíveis', Number(dashboard?.vacation_days_available || 0).toFixed(1), CalendarDays, 'saldo global'], ['Risco operacional', `${risk.toFixed(0)}/100`, AlertTriangle, risk >= 70 ? 'atenção imediata' : 'controlado']];
-  return <><section className="tc-hero"><div><div className="tc-eyebrow"><Sparkles size={13} /> Executive People Command</div><h1>Painel executivo</h1><p>Operação de RH em tempo real, com decisões e sinais críticos no mesmo fluxo.</p></div><div className="tc-actions"><button className="tc-btn" onClick={onRefresh}><RefreshCw size={15} /> Sincronizar</button><button className="tc-btn primary" onClick={() => onNavigate('tasks')}><Plus size={15} /> Nova tarefa</button></div></section><div className="tc-grid-6">{stats.map(([label, value, Icon, foot]) => <div className="tc-card tc-kpi" key={label}><div className="tc-kpi-top"><span>{label}</span><Icon size={15} /></div><div className="tc-kpi-value">{value}</div><div className="tc-kpi-foot">{foot}</div></div>)}</div><div className="tc-two tc-section"><section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Decisões pendentes</h2><span>{approvals.length} itens</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Alertas <ArrowRight size={13} /></button></div>{approvals.length === 0 ? <div className="tc-empty">A fila está limpa.</div> : <div className="tc-list">{approvals.slice(0, 8).map((item) => <div className="tc-row" key={`${item.kind}-${item.id}`}><div className="tc-row-main"><div className="tc-row-title">{item.employee} · {item.label}</div><div className="tc-row-sub">{item.meta}</div></div><div className="tc-actions"><button className="tc-btn tc-small" onClick={() => onApprove(item, false)}>Rejeitar</button><button className="tc-btn primary tc-small" onClick={() => onApprove(item, true)}><Check size={13} /> Aprovar</button></div></div>)}</div>}</section><section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Alertas preditivos</h2><span>{alerts.length} abertos</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Ver todos</button></div>{alerts.length === 0 ? <div className="tc-empty">Sem alertas críticos neste momento.</div> : alerts.slice(0, 6).map((a) => <div className="tc-alert" key={a.id}><div><div className="tc-alert-title">{a.title}</div><div className="tc-alert-msg">{a.message}</div></div><span className={`tc-badge ${String(a.severity).toLowerCase()}`}>{a.severity}</span></div>)}</section></div><div className="tc-section"><div className="tc-section-head"><div><h2>Fila de tarefas RH</h2><span>{tasks.filter((t) => t.status !== 'DONE' && t.status !== 'CANCELLED').length} abertas</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('tasks')}>Abrir kanban <ArrowRight size={13} /></button></div></div></>;
+  const openTasks = tasks.filter((task) => !['DONE', 'CANCELLED'].includes(task.status));
+  const urgentAlerts = alerts.filter((alert) => ['HIGH', 'CRITICAL', 'URGENT'].includes(String(alert.severity).toUpperCase()));
+  const lateSignal = Number(dashboard?.late_employees ?? dashboard?.late_count ?? 0);
+  const priorities = [
+    approvals[0] ? {
+      id: `approval-${approvals[0].id}`,
+      icon: CheckCircle2,
+      tone: 'blue',
+      eyebrow: 'DECISÃO',
+      title: `${approvals.length} pedido${approvals.length === 1 ? '' : 's'} aguarda${approvals.length === 1 ? '' : 'm'} decisão`,
+      detail: `${approvals[0].employee} · ${approvals[0].label} · ${approvals[0].meta}`,
+      action: 'Decidir agora',
+      target: 'overview',
+    } : null,
+    urgentAlerts[0] ? {
+      id: `alert-${urgentAlerts[0].id}`,
+      icon: AlertTriangle,
+      tone: 'danger',
+      eyebrow: 'RISCO',
+      title: urgentAlerts.length > 1 ? `${urgentAlerts.length} alertas de prioridade elevada` : urgentAlerts[0].title,
+      detail: urgentAlerts[0].message,
+      action: 'Investigar',
+      target: 'alerts',
+    } : alerts[0] ? {
+      id: `alert-${alerts[0].id}`,
+      icon: AlertTriangle,
+      tone: 'warning',
+      eyebrow: 'ATENÇÃO',
+      title: alerts[0].title,
+      detail: alerts[0].message,
+      action: 'Ver alertas',
+      target: 'alerts',
+    } : null,
+    openTasks[0] ? {
+      id: `task-${openTasks[0].id}`,
+      icon: Target,
+      tone: 'blue',
+      eyebrow: 'EXECUÇÃO',
+      title: `${openTasks.length} tarefa${openTasks.length === 1 ? '' : 's'} RH em aberto`,
+      detail: openTasks[0].title,
+      action: 'Abrir tarefas',
+      target: 'tasks',
+    } : null,
+    lateSignal > 0 ? {
+      id: 'attendance',
+      icon: Clock3,
+      tone: 'warning',
+      eyebrow: 'ASSIDUIDADE',
+      title: `${lateSignal} sinal${lateSignal === 1 ? '' : 's'} de atraso`,
+      detail: 'Acompanhe a operação antes de o problema chegar ao fecho do dia.',
+      action: 'Ver assiduidade',
+      target: 'attendance',
+    } : null,
+  ].filter(Boolean).slice(0, 4);
+
+  return <>
+    <section className="tc-hero">
+      <div><div className="tc-eyebrow"><Sparkles size={13} /> Executive People Command</div><h1>Painel executivo</h1><p>O Te-connect transforma os dados do RH em decisões, prioridades e ações para a operação de hoje.</p></div>
+      <div className="tc-actions"><button className="tc-btn" onClick={onRefresh}><RefreshCw size={15} /> Sincronizar</button><button className="tc-btn primary" onClick={() => onNavigate('tasks')}><Plus size={15} /> Nova tarefa</button></div>
+    </section>
+
+    <div className="tc-grid-6">{[
+      ['Headcount ativo', activeEmployees, Users, 'colaboradores'],
+      ['Assiduidade', `${attendanceRate.toFixed(1)}%`, Clock3, 'hoje'],
+      ['Horas extra', minutes(dashboard?.overtime_minutes_week), Zap, 'últimos 7 dias'],
+      ['Horas noturnas', minutes(dashboard?.night_minutes_week), Moon, 'últimos 7 dias'],
+      ['Férias disponíveis', Number(dashboard?.vacation_days_available || 0).toFixed(1), CalendarDays, 'saldo global'],
+      ['Risco operacional', `${risk.toFixed(0)}/100`, AlertTriangle, risk >= 70 ? 'atenção imediata' : 'controlado'],
+    ].map(([label, value, Icon, foot]) => <div className="tc-card tc-kpi" key={label}><div className="tc-kpi-top"><span>{label}</span><Icon size={15} /></div><div className="tc-kpi-value">{value}</div><div className="tc-kpi-foot">{foot}</div></div>)}</div>
+
+    <section className="tc-action-center tc-section">
+      <div className="tc-action-head">
+        <div><div className="tc-eyebrow"><Target size={13} /> Centro de ação</div><h2>O que merece atenção agora</h2><span>Menos navegação. Mais decisão.</span></div>
+        <span className="tc-action-count">{priorities.length} prioridades</span>
+      </div>
+      {priorities.length ? <div className="tc-action-grid">{priorities.map((item) => { const Icon = item.icon; return <button type="button" className={`tc-action-card ${item.tone}`} key={item.id} onClick={() => onNavigate(item.target)}><div className="tc-action-icon"><Icon size={17}/></div><div className="tc-action-copy"><small>{item.eyebrow}</small><strong>{item.title}</strong><span>{item.detail}</span><b>{item.action} <ArrowRight size={13}/></b></div></button>; })}</div> : <div className="tc-action-empty"><CheckCircle2 size={19}/><div><strong>Operação sob controlo</strong><span>Não existem prioridades críticas neste momento.</span></div></div>}
+    </section>
+
+    <div className="tc-two tc-section">
+      <section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Decisões pendentes</h2><span>{approvals.length} itens</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Alertas <ArrowRight size={13} /></button></div>{approvals.length === 0 ? <div className="tc-empty">A fila está limpa.</div> : <div className="tc-list">{approvals.slice(0, 8).map((item) => <div className="tc-row" key={`${item.kind}-${item.id}`}><div className="tc-row-main"><div className="tc-row-title">{item.employee} · {item.label}</div><div className="tc-row-sub">{item.meta}</div></div><div className="tc-actions"><button className="tc-btn tc-small" onClick={() => onApprove(item, false)}>Rejeitar</button><button className="tc-btn primary tc-small" onClick={() => onApprove(item, true)}><Check size={13} /> Aprovar</button></div></div>)}</div>}</section>
+      <section className="tc-card tc-card-pad"><div className="tc-section-head"><div><h2>Alertas preditivos</h2><span>{alerts.length} abertos</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('alerts')}>Ver todos</button></div>{alerts.length === 0 ? <div className="tc-empty">Sem alertas críticos neste momento.</div> : alerts.slice(0, 6).map((a) => <div className="tc-alert" key={a.id}><div><div className="tc-alert-title">{a.title}</div><div className="tc-alert-msg">{a.message}</div></div><span className={`tc-badge ${String(a.severity).toLowerCase()}`}>{a.severity}</span></div>)}</section>
+    </div>
+    <div className="tc-section"><div className="tc-section-head"><div><h2>Fila de tarefas RH</h2><span>{openTasks.length} abertas</span></div><button className="tc-btn tc-small" onClick={() => onNavigate('tasks')}>Abrir kanban <ArrowRight size={13} /></button></div></div>
+  </>;
 }
 function People({ employees }) { return <><section className="tc-hero"><div><div className="tc-eyebrow"><Users size={13} /> Pessoas</div><h1>Colaboradores</h1><p>Base operacional ligada diretamente ao tenant Supabase.</p></div></section><section className="tc-card tc-card-pad"><table className="tc-table"><thead><tr><th>Colaborador</th><th>Código</th><th>Email</th><th>Admissão</th><th>Estado</th></tr></thead><tbody>{employees.map((e) => <tr key={e.id}><td>{e.full_name}</td><td>{e.employee_code}</td><td>{e.email || '—'}</td><td>{e.hire_date || '—'}</td><td><span className="tc-badge low">{e.status}</span></td></tr>)}</tbody></table>{employees.length === 0 && <div className="tc-empty">Ainda não existem colaboradores neste tenant.</div>}</section></>; }
 function Attendance({ locations, anomalies, notify }) {
