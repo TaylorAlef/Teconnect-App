@@ -611,7 +611,10 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
           <h2>O que merece atenção agora</h2>
           <span>O Te-connect transforma os sinais do RH em próximos passos claros.</span>
         </div>
-        <span className="tc-priority-count">{priorityActions.length} ações</span>
+        <div className="tc-priority-head-actions">
+          <span className="tc-priority-count">{priorityActions.length} ações</span>
+          <button type="button" className="tc-priority-refresh" onClick={() => load(true)} aria-label="Atualizar indicadores"><RefreshCw size={14}/> Atualizar</button>
+        </div>
       </div>
       <div className="tc-priority-grid">
         {priorityActions.length ? priorityActions.map((item) => {
