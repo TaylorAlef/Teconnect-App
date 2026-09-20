@@ -192,7 +192,7 @@ function NativeLogin({ onSuccess }) {
 
         <div className="tc-auth-privacy">
           <span>Conta empresarial, sessão segura e dados separados por organização.</span>
-          <span><a href="/privacy.html">Privacidade</a><a href="/terms.html">Termos</a></span>
+          <span><a href="/privacy.html">Privacidade</a><a href="/terms.html">Termos</a><a href="/support.html">Suporte</a></span>
         </div>
         <div className="tc-auth-footer">Te-connect · People OS para empresas</div>
       </div>
