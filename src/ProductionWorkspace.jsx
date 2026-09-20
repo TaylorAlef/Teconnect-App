@@ -458,6 +458,16 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
 
   return <>
     <div className="tc-dashboard-welcome tc-dashboard-welcome-pro">
+      <div className="tc-dashboard-welcome-copy">
+        <div className="tc-dashboard-welcome-kicker"><Activity size={13}/> VISÃO EXECUTIVA</div>
+        <h2>Operação de pessoas em tempo real</h2>
+        <p>Uma visão clara do que está a acontecer hoje — pessoas, assiduidade, pendências e exceções.</p>
+        <div className="tc-dashboard-welcome-stats">
+          <span><b>{attendanceRate.toFixed(0)}%</b> presença</span>
+          <span><b>{pendingVacations.length + pendingOvertime.length}</b> pendências</span>
+          <span><b>{openAlerts.length}</b> alertas</span>
+        </div>
+      </div>
       <div className="tc-dashboard-promo" aria-label="Te-connect People OS">
         <img
           className="tc-dashboard-promo-image"
