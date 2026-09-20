@@ -49,3 +49,11 @@ jobs:
             test "$status" -lt 400
           done
           echo "Cloudflare production verification passed."
+
+  configuration-status:
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: ${{ needs.deploy.result == 'skipped' }}
+    steps:
+      - name: Explain deployment configuration
+        run: echo "Cloudflare deploy skipped because CLOUDFLARE_API_TOKEN and/or CLOUDFLARE_ACCOUNT_ID is not configured in GitHub Actions secrets."
