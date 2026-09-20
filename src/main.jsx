@@ -248,7 +248,7 @@ function CommercialBridge() {
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
   const [authLoading, setAuthLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
-  const isDemoMode = useMemo(() => new URLSearchParams(window.location.search).get('demo') === '1', []);
+  const isDemoMode = useMemo(() => import.meta.env.VITE_ENABLE_DEMO === 'true' && new URLSearchParams(window.location.search).get('demo') === '1', []);
 
   const loadCommercial = useCallback(async (activeSession) => {
     setProfileLoadError(null);
