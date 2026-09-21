@@ -42,6 +42,7 @@ import EmployeeRequestCenter from './people/EmployeeRequestCenter.jsx';
 import EmployeeImportPanel from './people/EmployeeImportPanel.jsx';
 import LifecycleCenter from './people/LifecycleCenter.jsx';
 import EmployeeMobileWorkspace from './employee/EmployeeMobileWorkspace.jsx';
+import { ToastProvider } from './ui/Toast.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
 import ExceptionCenter from './ops/ExceptionCenter.jsx';
 import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
@@ -52,6 +53,7 @@ import RulesCenter from './company/RulesCenter.jsx';
 import RoleCenter from './security/RoleCenter.jsx';
 import AdminMfaGate from './security/AdminMfaGate.jsx';
 import './styles.css';
+import './teconnect-nextgen-components.css';
 import './mobile.css';
 import './dock.css';
 import { initCloudflareWebAnalytics } from './lib/web-analytics.js';
@@ -616,4 +618,10 @@ function CommercialBridge() {
   );
 }
 
-createRoot(document.getElementById('root')).render(<React.StrictMode><CommercialBridge /></React.StrictMode>);
+createRoot(document.getElementById('root')).render(
+  <React.StrictMode>
+    <ToastProvider>
+      <CommercialBridge />
+    </ToastProvider>
+  </React.StrictMode>,
+);
