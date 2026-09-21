@@ -53,7 +53,6 @@ import RulesCenter from './company/RulesCenter.jsx';
 import RoleCenter from './security/RoleCenter.jsx';
 import AdminMfaGate from './security/AdminMfaGate.jsx';
 import './styles.css';
-import './teconnect-nextgen-components.css';
 import './mobile.css';
 import './dock.css';
 import { initCloudflareWebAnalytics } from './lib/web-analytics.js';
