@@ -231,7 +231,23 @@ export default function EmployeeMobileWorkspace({ profile }) {
     }
   };
 
-  if (loading && !clock) return <div className="te-employee-app te-employee-loading"><RefreshCw className="spin" size={22} /><span>A preparar o seu ponto…</span></div>;
+  if (loading && !clock) return (
+    <div className="te-employee-app te-employee-loading" aria-busy="true">
+      <header className="te-employee-topbar">
+        <div className="te-employee-brand"><img src="/teconnect-logo.svg" alt="Te-connect" className="te-employee-logo" /><div><strong>Te-connect</strong><span>Espaço do colaborador</span></div></div>
+        <div className="te-employee-actions"><span className="te-online-dot">Online</span><span className="te-employee-loading-pulse" /></div>
+      </header>
+      <main className="te-employee-main">
+        <div className="te-employee-stack">
+          <div className="te-employee-boot-block te-employee-boot-title" />
+          <div className="te-employee-boot-block te-employee-boot-status" />
+          <div className="te-employee-boot-block te-employee-boot-actions" />
+          <div className="te-employee-boot-grid"><span /><span /><span /><span /></div>
+        </div>
+      </main>
+      <nav className="te-employee-tabbar" aria-hidden="true"><button className="active" type="button"><Clock3 size={20} /><span>Hoje</span></button><button type="button"><CalendarDays size={20} /><span>Período</span></button><button type="button"><UserRound size={20} /><span>Conta</span></button></nav>
+    </div>
+  );
 
   const dateLabel = new Intl.DateTimeFormat('pt-PT', { weekday: 'long', day: '2-digit', month: 'long', timeZone: 'Europe/Lisbon' }).format(new Date());
   const monthLabel = new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(new Date(period + '-01T12:00:00'));
