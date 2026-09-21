@@ -38,10 +38,37 @@ const monthBounds = (value) => {
   return { start, endExclusive: next.getUTCFullYear() + '-' + String(next.getUTCMonth() + 1).padStart(2, '0') + '-01' };
 };
 
+const EMPLOYEE_CACHE_PREFIX = 'teconnect:employee:';
+
+function readEmployeeCache(profile) {
+  if (!profile?.company_id || !profile?.employee_id) return null;
+  try {
+    const raw = sessionStorage.getItem(EMPLOYEE_CACHE_PREFIX + profile.company_id + ':' + profile.employee_id);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.clock ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeEmployeeCache(profile, data) {
+  if (!profile?.company_id || !profile?.employee_id || !data?.clock) return;
+  try {
+    sessionStorage.setItem(
+      EMPLOYEE_CACHE_PREFIX + profile.company_id + ':' + profile.employee_id,
+      JSON.stringify({ ...data, cached_at: Date.now() }),
+    );
+  } catch {
+    // Cache is optional; the live server remains the source of truth.
+  }
+}
+
 export default function EmployeeMobileWorkspace({ profile }) {
+  const initialEmployeeCache = useMemo(() => readEmployeeCache(profile), [profile?.company_id, profile?.employee_id]);
   const [tab, setTab] = useState('home');
-  const [clock, setClock] = useState(null);
-  const [locations, setLocations] = useState([]);
+  const [clock, setClock] = useState(initialEmployeeCache?.clock || null);
+  const [locations, setLocations] = useState(initialEmployeeCache?.locations || []);
   const [days, setDays] = useState([]);
   const [entries, setEntries] = useState([]);
   const [period, setPeriod] = useState(() => {
@@ -49,7 +76,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
     return now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
   });
   const [busy, setBusy] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialEmployeeCache?.clock);
   const [notice, setNotice] = useState(null);
   const [online, setOnline] = useState(() => navigator.onLine);
   const [gps, setGps] = useState({ loading: false, location: null, distance: null, radius: null, accuracy: null });
@@ -74,8 +101,11 @@ export default function EmployeeMobileWorkspace({ profile }) {
       ]);
       if (clockResult.error) throw clockResult.error;
       if (locationsResult.error) throw locationsResult.error;
-      setClock(clockResult.data || null);
-      setLocations(locationsResult.data || []);
+      const nextClock = clockResult.data || null;
+      const nextLocations = locationsResult.data || [];
+      setClock(nextClock);
+      setLocations(nextLocations);
+      writeEmployeeCache(profile, { clock: nextClock, locations: nextLocations });
     } catch (error) {
       console.error(error);
       notify(error?.message || 'Não foi possível atualizar o ponto.', 'error');
@@ -115,7 +145,7 @@ export default function EmployeeMobileWorkspace({ profile }) {
 
   useEffect(() => {
     let mounted = true;
-    loadClock().catch(() => {});
+    loadClock(true).catch(() => {});
     const timer = window.setInterval(() => mounted && loadClock(true).catch(() => {}), 15000);
     const tick = window.setInterval(() => mounted && setNowMs(Date.now()), 1000);
     const onOnline = () => setOnline(true);
