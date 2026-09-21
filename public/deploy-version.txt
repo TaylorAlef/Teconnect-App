@@ -1,0 +1,5 @@
+TE-CONNECT BUILD
+Refresh hydration: enabled
+Production data: stale-while-revalidate
+Collaborator data: stale-while-revalidate
+Generated: 2026-09-21
