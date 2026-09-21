@@ -204,12 +204,10 @@ test.describe('TE-Connect critical commercial flow', () => {
       await expect(employeePage.getByText(/Entrada registada/)).toBeVisible();
 
       const attendanceDate = today();
-      const recalculated = await employeeSession.client.rpc('recalculate_attendance_day', {
-        p_employee_id: linked!.id,
-        p_work_date: attendanceDate,
-      });
-      expect(recalculated.error).toBeFalsy();
 
+      // register_time_entry() recalcula a folha diária no servidor.
+      // Não chamamos recalculate_attendance_day() diretamente porque essa função
+      // é interna e o EXECUTE para authenticated está corretamente revogado.
       const day = await getAttendanceDay(linked!.id, attendanceDate);
       expect(day).toBeTruthy();
       expect(day?.employee_id).toBe(linked!.id);
