@@ -34,6 +34,7 @@ import {
 import { createClient } from '@supabase/supabase-js';
 import './teconnect-suite.css';
 import { useToast } from './ui/Toast.jsx';
+import CommandPalette from './ui/CommandPalette.jsx';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -364,6 +365,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
   };
 
   return <div className="suite-app">
+    <CommandPalette onNavigate={setPage} onOpenAttendance={onOpenAttendance} onOpenPanel={onOpenPanel} />
     <aside className="suite-sidebar">
       <div className="suite-brand-wrap"><div className="tc-brand-mark" aria-label="Te-connect" /></div>
       <div className="suite-org"><div className="suite-org-icon"><Building2 size={17} /></div><div><strong>{state.company?.name || 'Te-connect'}</strong><span>{profile?.role || 'Utilizador'} · Produção</span></div></div>
