@@ -448,6 +448,11 @@ function CommercialBridge() {
     );
   }
   if (!profile) return null;
+  // Colaboradores nunca passam pelo shell de RH nem pelo MFA administrativo.
+  // O papel é resolvido a partir do profile + employees.user_id acima.
+  if (profile.role === 'EMPLOYEE') {
+    return <EmployeeMobileWorkspace profile={profile} />;
+  }
   if (ADMIN_HR_ROLES.has(profile.role) && !mfaReady) {
     return <AdminMfaGate supabase={supabase} profile={profile} onVerified={markMfaReady} />;
   }
