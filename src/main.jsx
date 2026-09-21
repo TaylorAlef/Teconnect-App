@@ -132,6 +132,35 @@ const roleLabels = {
   EMPLOYEE: 'Colaborador',
 };
 
+class AppErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error) {
+    console.error('Te-connect render error:', error);
+  }
+
+  render() {
+    if (!this.state.hasError) return this.props.children;
+    return (
+      <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f4f7fb', color: '#10223f', fontFamily: 'Inter, system-ui, sans-serif' }}>
+        <div style={{ width: '100%', maxWidth: 520, padding: 28, borderRadius: 20, border: '1px solid #e3eaf4', background: '#fff', boxShadow: '0 20px 55px rgba(16,42,79,.10)' }}>
+          <img className="tc-auth-logo" src="/teconnect-logo.svg" alt="Te-connect" style={{ marginBottom: 18 }} />
+          <h1 style={{ margin: '0 0 8px', fontSize: 22 }}>O Te-connect encontrou um problema</h1>
+          <p style={{ margin: '0 0 18px', color: '#66758d', lineHeight: 1.6, fontSize: 13 }}>Atualize a página para voltar ao ambiente de trabalho. Os dados da organização permanecem protegidos no servidor.</p>
+          <button type="button" className="tc-btn" onClick={() => window.location.reload()}>Atualizar aplicação</button>
+        </div>
+      </div>
+    );
+  }
+}
+
 function StartupError({ error }) {
   return (
     <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
@@ -712,8 +741,10 @@ function CommercialBridge() {
 
 createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <ToastProvider>
-      <CommercialBridge />
-    </ToastProvider>
+    <AppErrorBoundary>
+      <ToastProvider>
+        <CommercialBridge />
+      </ToastProvider>
+    </AppErrorBoundary>
   </React.StrictMode>,
 );
