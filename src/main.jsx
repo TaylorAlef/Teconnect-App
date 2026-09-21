@@ -487,6 +487,11 @@ function CommercialBridge() {
     setAttendancePanel(false);
     setPanel(null);
   };
+  const openPanel = (type) => {
+    setMoreOpen(false);
+    setAttendancePanel(false);
+    setPanel(type);
+  };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
   // Num refresh de uma sessão já conhecida, não bloquear a interface com
   // uma tela de sincronização: usamos o último perfil verificado e revalidamos
@@ -554,11 +559,6 @@ function CommercialBridge() {
 
   const canManageHr = ADMIN_HR_ROLES.has(profile.role);
   const canApprove = canManageHr || MANAGER_ROLES.has(profile.role);
-  const openPanel = (type) => {
-    setMoreOpen(false);
-    setAttendancePanel(false);
-    setPanel(type);
-  };
   const roleLabel = roleLabels[profile.role] || profile.role;
 
   const quickActions = [
