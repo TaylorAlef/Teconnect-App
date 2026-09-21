@@ -42,7 +42,13 @@ jobs:
           cache: npm
       - name: Install dependencies
         if: steps.credentials.outputs.configured == 'true'
-        run: npm ci
+        run: npm install --no-audit --no-fund
+      - name: Stamp production build
+        if: steps.credentials.outputs.configured == 'true'
+        shell: bash
+        run: |
+          printf 'commit=%s\nbuilt_at=%s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > public/deploy-version.txt
+
       - name: Build production
         if: steps.credentials.outputs.configured == 'true'
         run: npm run build
@@ -71,10 +77,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for path in "/" "/manifest.webmanifest" "/assets/teconnect-dashboard-hero.webp"; do
-            status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /dev/null -w '%{http_code}' "https://app.te-connect.com$path")"
+          for path in "/" "/manifest.webmanifest" "/teconnect-logo.svg" "/deploy-version.txt"; do
+            status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /tmp/teconnect-response -w '%{http_code}' "https://app.te-connect.com$path")"
             echo "$path -> $status"
             test "$status" -ge 200
             test "$status" -lt 400
           done
-          echo "Cloudflare production verification passed."
+          grep -F "commit=$GITHUB_SHA" /tmp/teconnect-response
+          echo "Cloudflare production verification passed for $GITHUB_SHA."
