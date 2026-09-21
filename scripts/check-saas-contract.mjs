@@ -37,6 +37,7 @@ const required = [
   'supabase/functions/teconnect-api/index.ts',
   'supabase/functions/integration-worker/index.ts',
   'supabase/functions/teconnect-webhook-deliver/index.ts',
+  'supabase/functions/teconnect-webhook-test/index.ts',
 ];
 
 const missing = required.filter((file) => !fs.existsSync(path.join(root, file)));
