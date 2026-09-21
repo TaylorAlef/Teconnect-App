@@ -12,6 +12,8 @@ on:
       - 'package.json'
       - 'vite.config.js'
       - 'wrangler.jsonc'
+      - 'playwright.config.ts'
+      - 'tests/e2e/**'
   workflow_dispatch:
   schedule:
     - cron: '17 */6 * * *'
@@ -79,3 +81,24 @@ jobs:
             test "$status" -lt 400
           done
           echo "Production static asset smoke check passed."
+
+
+  browser:
+    name: browser
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke — public refresh
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: https://app.te-connect.com
+        run: npx playwright test tests/e2e/production-refresh.spec.ts
