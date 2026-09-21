@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import './teconnect-suite.css';
+import { useToast } from './ui/Toast.jsx';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -164,7 +165,6 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
   const { state, load } = useLiveData(profile);
   const [page, setPage] = useState('overview');
   const [query, setQuery] = useState('');
-  const [toast, setToast] = useState(null);
   const [modal, setModal] = useState(null);
   const [busy, setBusy] = useState(false);
   const uploadRef = useRef(null);
@@ -172,11 +172,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
   const isManager = MANAGER_ROLES.has(profile?.role);
   const unread = state.notifications.filter((item) => !item.read_at && item.user_id === profile?.user_id).length;
 
-  const notify = useCallback((message, kind = 'ok') => {
-    setToast({ message, kind });
-    window.clearTimeout(window.__teconnectProductionToast);
-    window.__teconnectProductionToast = window.setTimeout(() => setToast(null), 3600);
-  }, []);
+  const notify = useToast();
 
   const liveEmployees = useMemo(() => state.employees.filter((item) => item.status === 'ACTIVE'), [state.employees]);
   const pendingVacations = state.vacations.filter((item) => item.status === 'PENDING');
@@ -219,7 +215,7 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
   const courseMap = useMemo(() => new Map(state.courses.map((item) => [item.id, item])), [state.courses]);
 
   const act = async (label, fn) => {
-    setBusy(true); setToast(null);
+    setBusy(true);
     try { await fn(); notify(label); await load(true); }
     catch (error) { notify(toastText(error), 'error'); }
     finally { setBusy(false); }
@@ -410,7 +406,6 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
       </div>
     </main>
 
-    {toast && <div className={`suite-toast ${toast.kind || 'ok'}`}><CheckCircle2 size={16} />{toast.message}</div>}
     {modal?.type === 'employee' && <EmployeeForm onClose={() => setModal(null)} onSave={createEmployee} />}
     {modal?.type === 'employee-detail' && <EmployeeDetail employee={modal.item} documents={state.documents.filter((d) => d.employee_id === modal.item.id)} trainings={state.trainings.filter((t) => t.employee_id === modal.item.id)} onClose={() => setModal(null)} />}
     {modal?.type === 'candidate' && <CandidateForm jobs={state.jobs} onClose={() => setModal(null)} onSave={createCandidate} />}
