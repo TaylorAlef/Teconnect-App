@@ -32,6 +32,8 @@ import ApprovalsCenter from './commercial/ApprovalsCenter.jsx';
 import PayrollControlCenter from './payroll/PayrollControlCenter.jsx';
 import BillingPage from './commercial/BillingPage.jsx';
 import OnboardingPage from './commercial/OnboardingPage.jsx';
+import PublicLanding from './commercial/PublicLanding.jsx';
+import './commercial/PublicLanding.css';
 import SuperAdminPage from './commercial/SuperAdminPage.jsx';
 import Employee360Panel from './people/Employee360Panel.jsx';
 import PerformanceCenter from './people/PerformanceCenter.jsx';
@@ -378,7 +380,13 @@ function CommercialBridge() {
     await supabase.auth.signOut();
   }} />;
   if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
-  if (!session) return <NativeLogin onSuccess={(nextSession) => { setMfaReady(false); setSession(nextSession); }} />;
+  if (!session) {
+    const publicPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    if (publicPath && !new URLSearchParams(window.location.search).has('mode')) {
+      return <PublicLanding onLogin={() => { window.history.pushState({}, '', '/login'); window.location.reload(); }} onSignup={() => { window.history.pushState({}, '', '/login?mode=signup'); window.location.reload(); }} />;
+    }
+    return <NativeLogin onSuccess={(nextSession) => { setMfaReady(false); setSession(nextSession); }} />;
+  }
   if (!profile && profileLoadError) {
     return (
       <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 24, background: '#f4f7fb', color: '#10223f', fontFamily: 'Inter, system-ui, sans-serif' }}>
