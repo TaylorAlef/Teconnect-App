@@ -1,4 +1,4 @@
-name: Te-connect Cloudflare Deploy
+name: Te-connect Production Gate
 
 on:
   push:
@@ -6,96 +6,42 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: teconnect-cloudflare-production
+  group: teconnect-production-gate
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  validate:
+    name: build-and-validate
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
-    outputs:
-      deployed: ${{ steps.result.outputs.deployed }}
     steps:
-      - name: Check Cloudflare credentials
-        id: credentials
-        shell: bash
-        env:
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
-            echo "ERROR: Configure CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in GitHub Actions secrets before production deployment."
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            exit 1
-          fi
-          echo "configured=true" >> "$GITHUB_OUTPUT"
-
       - name: Checkout
-        if: steps.credentials.outputs.configured == 'true'
         uses: actions/checkout@v4
+
       - name: Setup Node
-        if: steps.credentials.outputs.configured == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 22
+
       - name: Install dependencies
-        if: steps.credentials.outputs.configured == 'true'
         run: npm install --no-audit --no-fund
-      - name: Stamp production build
-        if: steps.credentials.outputs.configured == 'true'
-        shell: bash
-        run: |
-          printf 'commit=%s\nbuilt_at=%s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > public/deploy-version.txt
 
       - name: Build production
-        if: steps.credentials.outputs.configured == 'true'
         run: npm run build
-      - name: Deploy to Cloudflare
-        if: steps.credentials.outputs.configured == 'true'
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler deploy
-      - name: Record deployment result
-        id: result
-        shell: bash
-        run: |
-          if [ "${{ steps.credentials.outputs.configured }}" = "true" ]; then
-            echo "deployed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "deployed=false" >> "$GITHUB_OUTPUT"
-          fi
 
-  verify:
-    runs-on: ubuntu-latest
-    needs: deploy
-    if: ${{ needs.deploy.result == 'success' && needs.deploy.outputs.deployed == 'true' }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Install Playwright Chromium
-        run: npx playwright install --with-deps chromium
-      - name: Verify Cloudflare production
-        shell: bash
-        run: |
-          set -euo pipefail
-          for path in "/" "/manifest.webmanifest" "/teconnect-logo.svg" "/deploy-version.txt"; do
-            status="$(curl -L --silent --show-error --retry 3 --connect-timeout 10 --max-time 30 -o /tmp/teconnect-response -w '%{http_code}' "https://app.te-connect.com$path")"
-            echo "$path -> $status"
-            test "$status" -ge 200
-            test "$status" -lt 400
-          done
-          grep -F "commit=$GITHUB_SHA" /tmp/teconnect-response
-          echo "Cloudflare production verification passed for $GITHUB_SHA."
+      - name: Validate branding
+        run: npm run check:branding
 
-      - name: Browser smoke — public refresh
-        env:
-          PLAYWRIGHT_TEST_BASE_URL: https://app.te-connect.com
-        run: npx playwright test tests/e2e/production-refresh.spec.ts
+      - name: Validate globalization
+        run: npm run check:globalization
+
+      - name: Validate web launch
+        run: npm run check:web-launch
+
+      - name: Validate SaaS contract
+        run: npm run check:saas-contract
+
+      - name: Validate mobile readiness
+        run: npm run mobile:check
