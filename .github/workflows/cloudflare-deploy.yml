@@ -72,6 +72,16 @@ jobs:
     needs: deploy
     if: ${{ needs.deploy.result == 'success' && needs.deploy.outputs.deployed == 'true' }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
       - name: Verify Cloudflare production
         shell: bash
         run: |
@@ -84,3 +94,8 @@ jobs:
           done
           grep -F "commit=$GITHUB_SHA" /tmp/teconnect-response
           echo "Cloudflare production verification passed for $GITHUB_SHA."
+
+      - name: Browser smoke — public refresh
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: https://app.te-connect.com
+        run: npx playwright test tests/e2e/production-refresh.spec.ts
