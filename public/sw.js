@@ -1,4 +1,4 @@
-const CACHE = 'te-connect-shell-v2';
+const CACHE = 'te-connect-shell-v3';
 const STATIC = ['/manifest.webmanifest', '/teconnect-logo.svg'];
 
 self.addEventListener('install', (event) => {
