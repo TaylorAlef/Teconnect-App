@@ -16,24 +16,17 @@ const COMMANDS = [
   { id: 'timesheet', label: 'Abrir espelho de ponto', hint: 'Ir para o módulo de ponto', icon: FileText, keywords: 'gerar espelho ponto março relatório' },
 ];
 
-function clickNavigation(label) {
-  const buttons = Array.from(document.querySelectorAll('.tc-nav button, .nav-item'));
-  const target = buttons.find((button) => (button.textContent || '').toLowerCase().includes(label.toLowerCase()));
-  if (target) {
-    target.click();
-    return true;
-  }
+function runCommand(command, { onNavigate, onOpenAttendance, onOpenPanel }) {
+  if (command.id === 'attendance') return onOpenAttendance?.();
+  if (command.id === 'employee') return onNavigate?.('people');
+  if (command.id === 'vacations') return onOpenPanel?.('approvals');
+  if (command.id === 'timesheet') return onNavigate?.('attendance');
+  if (command.id && ['overview','people','recruitment','onboarding','attendance','vacations','documents','development','tasks','alerts','payroll','integrations','notifications'].includes(command.id)) return onNavigate?.(command.id);
   return false;
 }
 
-function runCommand(command) {
-  if (command.id === 'employee') return clickNavigation('Pessoas');
-  if (command.id === 'vacations') return clickNavigation('Visão geral');
-  if (command.id === 'timesheet') return clickNavigation('Ponto');
-  return clickNavigation(command.label.replace('Abrir ', '').split(' &')[0]);
-}
 
-export default function CommandPalette() {
+export default function CommandPalette({ onNavigate, onOpenAttendance, onOpenPanel }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState(0);
@@ -65,7 +58,7 @@ export default function CommandPalette() {
       }
       if (event.key === 'Enter' && results[selected]) {
         event.preventDefault();
-        runCommand(results[selected]);
+        runCommand(results[selected], { onNavigate, onOpenAttendance, onOpenPanel });
         setOpen(false);
         setQuery('');
       }
@@ -113,7 +106,7 @@ export default function CommandPalette() {
                 key={item.id}
                 className={`tc-command-item ${active ? 'active' : ''}`}
                 onMouseEnter={() => setSelected(index)}
-                onClick={() => { runCommand(item); setOpen(false); setQuery(''); }}
+                onClick={() => { runCommand(item, { onNavigate, onOpenAttendance, onOpenPanel }); setOpen(false); setQuery(''); }}
               >
                 <span className="tc-command-icon"><Icon size={16} /></span>
                 <span className="tc-command-copy"><strong>{item.label}</strong><small>{item.hint}</small></span>
