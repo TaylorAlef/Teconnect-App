@@ -75,6 +75,50 @@ try {
 
 const ADMIN_HR_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
 const MANAGER_ROLES = new Set(['GESTOR', 'SUPERVISOR']);
+
+const SESSION_STORAGE_KEY = 'teconnect:auth-session';
+const PROFILE_STORAGE_KEY = 'teconnect:auth-profile';
+
+function readCachedSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.user?.id && parsed?.access_token ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedProfile(sessionValue = null) {
+  try {
+    const raw = sessionStorage.getItem(PROFILE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    const userId = sessionValue?.user?.id;
+    return parsed?.user_id && (!userId || parsed.user_id === userId) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function persistAuthCache(nextSession, nextProfile) {
+  try {
+    if (nextSession) sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
+    if (nextProfile) sessionStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+  } catch {
+    // Cache is only a UX optimisation; authentication and authorisation remain server-side.
+  }
+}
+
+function clearAuthCache() {
+  try {
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    sessionStorage.removeItem(PROFILE_STORAGE_KEY);
+  } catch {
+    // Ignore storage restrictions/private mode.
+  }
+}
 const roleLabels = {
   SUPER_ADMIN: 'Super Admin',
   COMPANY_ADMIN: 'Admin da empresa',
@@ -240,8 +284,10 @@ function PasswordRecoveryPage({ onComplete }) {
 }
 
 function CommercialBridge() {
-  const [session, setSession] = useState(null);
-  const [profile, setProfile] = useState(null);
+  const cachedSession = useMemo(() => readCachedSession(), []);
+  const cachedProfile = useMemo(() => readCachedProfile(cachedSession), [cachedSession]);
+  const [session, setSession] = useState(cachedSession);
+  const [profile, setProfile] = useState(cachedProfile);
   const [profileLoadError, setProfileLoadError] = useState(null);
   const [billing, setBilling] = useState(null);
   const [panel, setPanel] = useState(null);
@@ -251,22 +297,22 @@ function CommercialBridge() {
   const [notice, setNotice] = useState(null);
   const [attendanceLocations, setAttendanceLocations] = useState([]);
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
-  const [authLoading, setAuthLoading] = useState(true);
+  const [authLoading, setAuthLoading] = useState(!(cachedSession && cachedProfile));
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [mfaReady, setMfaReady] = useState(false);
   const isDemoMode = useMemo(() => import.meta.env.VITE_ENABLE_DEMO === 'true' && new URLSearchParams(window.location.search).get('demo') === '1', []);
   const markMfaReady = useCallback(() => setMfaReady(true), []);
 
   const loadCommercial = useCallback(async (activeSession) => {
-    // Nunca reaproveitar o perfil do utilizador anterior durante uma troca de sessão.
-    // Isto evita que um colaborador recém-autenticado veja temporariamente o workspace de RH.
     setProfileLoadError(null);
-    setProfile(null);
-    setBilling(null);
-    setPanel(null);
-    setNeedsOnboarding(false);
-
-    if (!activeSession) return;
+    if (!activeSession) {
+      setProfile(null);
+      setBilling(null);
+      setPanel(null);
+      setNeedsOnboarding(false);
+      clearAuthCache();
+      return;
+    }
 
     try {
       const profileResult = await supabase.rpc('get_my_profile');
@@ -277,7 +323,9 @@ function CommercialBridge() {
 
       const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
       if (!nextProfile) {
-        setNeedsOnboarding(true);
+        // Num refresh, manter o último perfil verificado enquanto a consulta é revalidada.
+        // O onboarding só aparece quando não existe qualquer perfil recuperável.
+        setNeedsOnboarding(!(profile || cachedProfile));
         return;
       }
 
@@ -301,12 +349,22 @@ function CommercialBridge() {
             employee_code: linkedEmployee.employee_code,
             full_name: linkedEmployee.full_name || nextProfile.full_name,
           });
+          const employeeProfile = {
+            ...nextProfile,
+            role: 'EMPLOYEE',
+            employee_id: linkedEmployee.id,
+            employee_code: linkedEmployee.employee_code,
+            full_name: linkedEmployee.full_name || nextProfile.full_name,
+          };
+          setProfile(employeeProfile);
+          persistAuthCache(activeSession, employeeProfile);
           setNeedsOnboarding(false);
           return;
         }
       }
 
       setProfile(nextProfile);
+      persistAuthCache(activeSession, nextProfile);
       setNeedsOnboarding(!nextProfile.company_id);
 
       if (!nextProfile?.company_id || ![...ADMIN_HR_ROLES, ...MANAGER_ROLES].includes(nextProfile.role)) return;
@@ -315,12 +373,13 @@ function CommercialBridge() {
       const billingResult = await supabase.rpc('get_my_billing');
       setBilling(!billingResult.error ? (Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data) : null);
     } catch (error) {
-      setProfile(null);
-      setBilling(null);
-      setNeedsOnboarding(false);
+      // Durante um refresh, conservar o último contexto verificado em vez de
+      // substituir a aplicação por uma página de erro.
       setProfileLoadError(error);
+      setBilling(null);
+      if (!profile && !cachedProfile) setNeedsOnboarding(false);
     }
-  }, []);
+  }, [cachedProfile, profile]);
 
   const loadAttendanceContext = useCallback(async () => {
     if (!profile?.company_id) return;
@@ -352,6 +411,14 @@ function CommercialBridge() {
     supabase.auth.getSession().then(async ({ data }) => {
       if (!active) return;
       const nextSession = data.session || null;
+      const storedProfile = readCachedProfile(nextSession);
+      if (!nextSession) {
+        setProfile(null);
+        clearAuthCache();
+      } else if (storedProfile) {
+        setProfile(storedProfile);
+        persistAuthCache(nextSession, storedProfile);
+      }
       setSession(nextSession);
       try {
         await loadCommercial(nextSession);
@@ -372,6 +439,7 @@ function CommercialBridge() {
         setBilling(null);
         setProfileLoadError(null);
         setNeedsOnboarding(false);
+        clearAuthCache();
       }
 
       if (event === 'SIGNED_IN') {
@@ -381,6 +449,7 @@ function CommercialBridge() {
         setBilling(null);
         setProfileLoadError(null);
         setNeedsOnboarding(false);
+        clearAuthCache();
       }
 
       setSession(nextSession || null);
