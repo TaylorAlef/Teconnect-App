@@ -96,7 +96,7 @@ function StartupError({ error }) {
 }
 
 function NativeLogin({ onSuccess }) {
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(() => new URLSearchParams(window.location.search).get('mode') === 'signup' ? 'signup' : 'login');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
