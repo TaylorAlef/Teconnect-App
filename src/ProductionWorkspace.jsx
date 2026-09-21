@@ -59,8 +59,37 @@ async function rpc(name, args = {}) {
   return data;
 }
 
+const LIVE_DATA_CACHE_PREFIX = 'teconnect:live-data:';
+
+function readLiveDataCache(profile) {
+  if (!profile?.company_id || !profile?.user_id) return null;
+  try {
+    const raw = sessionStorage.getItem(LIVE_DATA_CACHE_PREFIX + profile.company_id + ':' + profile.user_id);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.company ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLiveDataCache(profile, data) {
+  if (!profile?.company_id || !profile?.user_id || !data?.company) return;
+  try {
+    sessionStorage.setItem(
+      LIVE_DATA_CACHE_PREFIX + profile.company_id + ':' + profile.user_id,
+      JSON.stringify({ ...data, error: null, loading: false, cached_at: Date.now() }),
+    );
+  } catch {
+    // Session cache is best-effort only.
+  }
+}
+
 function useLiveData(profile) {
-  const [state, setState] = useState({
+  const [state, setState] = useState(() => {
+    const cached = readLiveDataCache(profile);
+    return cached ? { ...cached, loading: false, error: null } : {
+    
     company: null,
     employees: [],
     attendance: [],
@@ -82,6 +111,7 @@ function useLiveData(profile) {
     invitations: [],
     loading: true,
     error: null,
+  };
   });
 
   const load = useCallback(async (silent = false) => {
@@ -122,7 +152,7 @@ function useLiveData(profile) {
       }
     });
 
-    setState({
+    const nextState = {
       company: next.company || null,
       employees: next.employees || [],
       attendance: next.attendance || [],
@@ -144,10 +174,12 @@ function useLiveData(profile) {
       invitations: next.invitations || [],
       loading: false,
       error: failures.length ? `Alguns módulos não responderam: ${failures[0]}` : null,
-    });
-  }, [profile?.company_id]);
+    };
+    writeLiveDataCache(profile, nextState);
+    setState(nextState);
+  }, [profile?.company_id, profile?.user_id]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(true); }, [load]);
   return { state, load };
 }
 
