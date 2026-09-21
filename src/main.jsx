@@ -325,7 +325,7 @@ function CommercialBridge() {
       if (!nextProfile) {
         // Num refresh, manter o último perfil verificado enquanto a consulta é revalidada.
         // O onboarding só aparece quando não existe qualquer perfil recuperável.
-        setNeedsOnboarding(!(profile || cachedProfile));
+        setNeedsOnboarding(!cachedProfile);
         return;
       }
 
@@ -370,9 +370,9 @@ function CommercialBridge() {
       // substituir a aplicação por uma página de erro.
       setProfileLoadError(error);
       setBilling(null);
-      if (!profile && !cachedProfile) setNeedsOnboarding(false);
+      if (!cachedProfile) setNeedsOnboarding(false);
     }
-  }, [cachedProfile, profile]);
+  }, [cachedProfile]);
 
   const loadAttendanceContext = useCallback(async () => {
     if (!profile?.company_id) return;
