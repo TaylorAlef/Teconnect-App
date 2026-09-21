@@ -43,6 +43,7 @@ import EmployeeImportPanel from './people/EmployeeImportPanel.jsx';
 import LifecycleCenter from './people/LifecycleCenter.jsx';
 import EmployeeMobileWorkspace from './employee/EmployeeMobileWorkspace.jsx';
 import { ToastProvider } from './ui/Toast.jsx';
+import { SkeletonKpiRow, SkeletonTable } from './ui/Skeleton.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
 import ExceptionCenter from './ops/ExceptionCenter.jsx';
 import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
@@ -419,9 +420,12 @@ function CommercialBridge() {
   };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
   if (authLoading) return (
-
-    <div style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#07101f', color: '#fff', fontFamily: 'Inter, system-ui, sans-serif' }}>
-      <div style={{ textAlign: 'center' }}><img className="tc-auth-logo tc-auth-logo-small" src="/teconnect-logo.svg" alt="Te-connect" /><strong>A iniciar o Te-connect…</strong></div>
+    <div className="tc-app-boot" aria-busy="true">
+      <div className="tc-app-boot-inner">
+        <div className="tc-app-boot-brand"><img src="/teconnect-logo.svg" alt="Te-connect" /><span className="tc-app-boot-dot" /></div>
+        <SkeletonKpiRow count={4} />
+        <div className="tc-app-boot-panel"><SkeletonTable rows={6} cols={5} /></div>
+      </div>
     </div>
   );
   if (recoveryMode && session) return <PasswordRecoveryPage onComplete={async () => {
