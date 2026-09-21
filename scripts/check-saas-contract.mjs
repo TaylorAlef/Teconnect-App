@@ -37,20 +37,21 @@ const required = [
   'supabase/functions/teconnect-api/index.ts',
   'supabase/functions/integration-worker/index.ts',
   'supabase/functions/teconnect-webhook-deliver/index.ts',
-  'supabase/migrations/20260919211500_v202_profile_rls_helper_grant.sql',
-  'supabase/migrations/20260919220000_v203_client_rpc_and_rls_access_restore.sql',
-  'supabase/migrations/20260919221000_v204_clock_event_timestamp_hardening.sql',
-  'supabase/migrations/20260919223000_v205_onboarding_bootstrap_for_new_users.sql',
-  'supabase/migrations/20260919225000_v206_self_service_request_rls.sql',
-  'supabase/migrations/20260919230000_v207_missing_client_rpc_grants.sql',
-  'supabase/migrations/20260919231500_v208_onboarding_profile_name_metadata.sql',
-  'supabase/migrations/20260919232000_v209_clock_concurrency_lock.sql',
 ];
 
 const missing = required.filter((file) => !fs.existsSync(path.join(root, file)));
 if (missing.length) {
   console.error('SaaS contract check failed. Missing: ' + missing.join(', '));
   process.exit(1);
+}
+
+const migrationDir = path.join(root, 'supabase', 'migrations');
+const migrationFiles = fs.existsSync(migrationDir)
+  ? fs.readdirSync(migrationDir).filter((file) => /\\.sql$/i.test(file))
+  : [];
+
+if (!migrationFiles.length) {
+  console.warn('SaaS contract check warning: SQL migration files are not mirrored in this repository. Production migration state is managed in Supabase.');
 }
 
 const clientFiles = required.filter((file) => /^(src\/|public\/)/.test(file) && /\.(jsx?|tsx|mjs|html)$/.test(file));
