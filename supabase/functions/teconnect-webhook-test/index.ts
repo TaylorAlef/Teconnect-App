@@ -20,14 +20,14 @@ function corsHeaders(origin: string | null) {
 const supabaseUrl=Deno.env.get("SUPABASE_URL")!;
 const serviceKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const admin=createClient(supabaseUrl,serviceKey,{auth:{persistSession:false}});
-const json=(body:unknown,status=200,origin:string|null=null)=>new Response(JSON.stringify(body,{
+const json=(body:unknown,status=200,origin:string|null=null)=>new Response(JSON.stringify(body),{
   status,
   headers:{
     ...corsHeaders(origin),
     "Content-Type":"application/json; charset=utf-8",
     "Cache-Control":"no-store",
   },
-}));async function sha256Hex(v:string){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map((x)=>x.toString(16).padStart(2,"0")).join("")}
+});async function sha256Hex(v:string){const b=new TextEncoder().encode(v);const h=await crypto.subtle.digest("SHA-256",b);return Array.from(new Uint8Array(h)).map((x)=>x.toString(16).padStart(2,"0")).join("")}
 Deno.serve(async(req)=>{
 const origin=req.headers.get("Origin");
 if(req.method==="OPTIONS")return new Response("ok",{status:204,headers:corsHeaders(origin)});
