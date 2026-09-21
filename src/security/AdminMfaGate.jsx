@@ -65,10 +65,14 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
         if (unenrollError) throw unenrollError;
       }
 
-      const enrollment = await supabase.auth.mfa.enroll({
-        factorType: 'totp',
-        friendlyName: 'Te-connect Admin',
-      });
+      const enrollTotp = async (friendlyName = 'Te-connect Admin') => {
+        return supabase.auth.mfa.enroll({
+          factorType: 'totp',
+          friendlyName,
+        });
+      };
+
+      let enrollment = await enrollTotp();
 
       if (enrollment.error) {
         // Supabase can retain a factor created by a previous interrupted
@@ -95,12 +99,15 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
           });
           if (cleanupError) throw cleanupError;
 
-          const retryEnrollment = await supabase.auth.mfa.enroll({
-            factorType: 'totp',
-            friendlyName: 'Te-connect Admin',
-          });
+          // Supabase may take a moment to release the friendly name after
+          // unenrolling a stale factor. Use a unique fallback name so an
+          // old "Te-connect Admin" factor can never block the login flow.
+          const retryEnrollment = await enrollTotp(
+            `Te-connect Admin ${Date.now()}`
+          );
           if (retryEnrollment.error) throw retryEnrollment.error;
 
+          enrollment = retryEnrollment;
           setFactorId(retryEnrollment.data.id);
           setQrCode(retryEnrollment.data?.totp?.qr_code || '');
           setSecret(retryEnrollment.data?.totp?.secret || '');
@@ -108,7 +115,24 @@ export default function AdminMfaGate({ supabase, profile, onVerified }) {
           return;
         }
 
-        throw enrollment.error;
+        // Last-resort recovery for Supabase's duplicate-friendly-name error.
+        // The factor may exist server-side while the first listFactors() call
+        // is still returning a stale snapshot.
+        const duplicateFriendlyName = /friendly name|already exists|já existe/i.test(
+          enrollment.error?.message || ''
+        );
+        if (duplicateFriendlyName) {
+          const fallbackEnrollment = await enrollTotp(
+            `Te-connect Admin ${Date.now()}`
+          );
+          if (!fallbackEnrollment.error) {
+            enrollment = fallbackEnrollment;
+          } else {
+            throw fallbackEnrollment.error;
+          }
+        } else {
+          throw enrollment.error;
+        }
       }
 
       setFactorId(enrollment.data.id);
