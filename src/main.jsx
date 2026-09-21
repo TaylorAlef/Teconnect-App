@@ -440,13 +440,16 @@ function CommercialBridge() {
       }
 
       if (event === 'SIGNED_IN') {
-        // Limpa imediatamente o contexto anterior antes de resolver o novo utilizador.
+        // Um refresh/token refresh pode emitir SIGNED_IN novamente.
+        // Nunca apagar o último perfil verificado do mesmo utilizador, porque
+        // isso força a aplicação a regressar ao ecrã de bootstrap.
+        const storedProfile = readCachedProfile(nextSession);
         setMfaReady(false);
-        setProfile(null);
         setBilling(null);
         setProfileLoadError(null);
         setNeedsOnboarding(false);
-        clearAuthCache();
+        if (storedProfile) setProfile(storedProfile);
+        else if (profile && profile.user_id === nextSession?.user?.id) setProfile(profile);
       }
 
       setSession(nextSession || null);
