@@ -256,39 +256,68 @@ function CommercialBridge() {
   const markMfaReady = useCallback(() => setMfaReady(true), []);
 
   const loadCommercial = useCallback(async (activeSession) => {
+    // Nunca reaproveitar o perfil do utilizador anterior durante uma troca de sessão.
+    // Isto evita que um colaborador recém-autenticado veja temporariamente o workspace de RH.
     setProfileLoadError(null);
-    if (!activeSession) {
+    setProfile(null);
+    setBilling(null);
+    setPanel(null);
+    setNeedsOnboarding(false);
+
+    if (!activeSession) return;
+
+    try {
+      const profileResult = await supabase.rpc('get_my_profile');
+      if (profileResult.error) {
+        setProfileLoadError(profileResult.error);
+        return;
+      }
+
+      const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
+      if (!nextProfile) {
+        setNeedsOnboarding(true);
+        return;
+      }
+
+      // Acesso de colaborador é resolvido pela ligação real employees.user_id.
+      // Mesmo que um perfil antigo esteja em cache ou tenha role incorreta,
+      // a conta ligada ao colaborador deve entrar exclusivamente no workspace móvel.
+      if (nextProfile.company_id && nextProfile.user_id) {
+        const { data: linkedEmployee, error: employeeLookupError } = await supabase
+          .from('employees')
+          .select('id,employee_code,full_name,status')
+          .eq('company_id', nextProfile.company_id)
+          .eq('user_id', nextProfile.user_id)
+          .eq('status', 'ACTIVE')
+          .maybeSingle();
+
+        if (!employeeLookupError && linkedEmployee) {
+          setProfile({
+            ...nextProfile,
+            role: 'EMPLOYEE',
+            employee_id: linkedEmployee.id,
+            employee_code: linkedEmployee.employee_code,
+            full_name: linkedEmployee.full_name || nextProfile.full_name,
+          });
+          setNeedsOnboarding(false);
+          return;
+        }
+      }
+
+      setProfile(nextProfile);
+      setNeedsOnboarding(!nextProfile.company_id);
+
+      if (!nextProfile?.company_id || ![...ADMIN_HR_ROLES, ...MANAGER_ROLES].includes(nextProfile.role)) return;
+      if (!ADMIN_HR_ROLES.has(nextProfile.role)) return;
+
+      const billingResult = await supabase.rpc('get_my_billing');
+      setBilling(!billingResult.error ? (Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data) : null);
+    } catch (error) {
       setProfile(null);
       setBilling(null);
-      setPanel(null);
       setNeedsOnboarding(false);
-      return;
+      setProfileLoadError(error);
     }
-    const profileResult = await supabase.rpc('get_my_profile');
-    if (profileResult.error) {
-      setProfile(null);
-      setBilling(null);
-      setNeedsOnboarding(false);
-      setProfileLoadError(profileResult.error);
-      return;
-    }
-    const nextProfile = Array.isArray(profileResult.data) ? profileResult.data[0] : profileResult.data;
-    setProfile(nextProfile || null);
-    if (!nextProfile) {
-      setNeedsOnboarding(true);
-      return;
-    }
-    setNeedsOnboarding(!nextProfile.company_id);
-    if (!nextProfile?.company_id || ![...ADMIN_HR_ROLES, ...MANAGER_ROLES].includes(nextProfile.role)) {
-      setBilling(null);
-      return;
-    }
-    if (!ADMIN_HR_ROLES.has(nextProfile.role)) {
-      setBilling(null);
-      return;
-    }
-    const billingResult = await supabase.rpc('get_my_billing');
-    setBilling(!billingResult.error ? (Array.isArray(billingResult.data) ? billingResult.data[0] : billingResult.data) : null);
   }, []);
 
   const loadAttendanceContext = useCallback(async () => {
@@ -333,13 +362,32 @@ function CommercialBridge() {
     });
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true);
+
       if (event === 'SIGNED_OUT') {
         setRecoveryMode(false);
         setMfaReady(false);
+        setProfile(null);
+        setBilling(null);
+        setProfileLoadError(null);
+        setNeedsOnboarding(false);
       }
-      if (event === 'SIGNED_IN') setMfaReady(false);
+
+      if (event === 'SIGNED_IN') {
+        // Limpa imediatamente o contexto anterior antes de resolver o novo utilizador.
+        setMfaReady(false);
+        setProfile(null);
+        setBilling(null);
+        setProfileLoadError(null);
+        setNeedsOnboarding(false);
+      }
+
       setSession(nextSession || null);
-      loadCommercial(nextSession || null).catch(console.error);
+      loadCommercial(nextSession || null).catch((error) => {
+        setProfile(null);
+        setBilling(null);
+        setProfileLoadError(error);
+      });
+
       if (!nextSession) {
         setAttendancePanel(false);
         setMoreOpen(false);
@@ -379,7 +427,6 @@ function CommercialBridge() {
     setRecoveryMode(false);
     await supabase.auth.signOut();
   }} />;
-  if (profile?.role === 'EMPLOYEE') return <EmployeeMobileWorkspace profile={profile} />;
   if (!session) {
     const publicPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
     if (publicPath && !new URLSearchParams(window.location.search).has('mode')) {
