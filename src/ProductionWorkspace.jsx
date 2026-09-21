@@ -318,7 +318,21 @@ export default function ProductionWorkspace({ profile, onOpenAttendance, onOpenP
     } catch (error) { notify(toastText(error), 'error'); }
   };
 
-  if (state.loading) return <div className="tc-loading"><div style={{ width: 'min(980px, 92vw)' }}><div className="tc-brand-mark" style={{ margin: '0 auto 18px' }}>T</div><SkeletonKpiRow count={4} /><div style={{ marginTop: 16, background: 'rgba(255,255,255,.03)', borderRadius: 16, padding: 16 }}><SkeletonTable rows={7} cols={5} /></div><p style={{ marginTop: 14, textAlign: 'center', color: 'rgba(255,255,255,.46)', fontSize: 11 }}>A sincronizar a organização…</p></div></div>;
+  if (state.loading) return (
+    <div className="tc-workspace-boot" aria-busy="true">
+      <aside className="tc-workspace-boot-side">
+        <div className="tc-workspace-boot-logo"><span>T</span></div>
+        <div className="tc-workspace-boot-lines">
+          <span /><span /><span /><span /><span /><span />
+        </div>
+      </aside>
+      <main className="tc-workspace-boot-main">
+        <div className="tc-workspace-boot-head"><span /><span /></div>
+        <SkeletonKpiRow count={4} />
+        <div className="tc-workspace-boot-card"><SkeletonTable rows={7} cols={5} /></div>
+      </main>
+    </div>
+  );
 
   const meta = {
     overview: ['Visão geral', 'Comando operacional do RH'], people: ['Colaboradores', 'Base de pessoas, contratos e estrutura'], recruitment: ['Recrutamento', 'Pipeline de vagas, candidatos e entrevistas'], onboarding: ['Onboarding', 'Integração operacional e acesso do colaborador'],
