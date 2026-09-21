@@ -92,7 +92,7 @@ function readCachedSession() {
 
 function readCachedProfile(sessionValue = null) {
   try {
-    const raw = sessionStorage.getItem(PROFILE_STORAGE_KEY);
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY) || sessionStorage.getItem(PROFILE_STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const userId = sessionValue?.user?.id;
@@ -105,7 +105,10 @@ function readCachedProfile(sessionValue = null) {
 function persistAuthCache(nextSession, nextProfile) {
   try {
     if (nextSession) sessionStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(nextSession));
-    if (nextProfile) sessionStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    if (nextProfile) {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+      sessionStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(nextProfile));
+    }
   } catch {
     // Cache is only a UX optimisation; authentication and authorisation remain server-side.
   }
@@ -115,6 +118,7 @@ function clearAuthCache() {
   try {
     sessionStorage.removeItem(SESSION_STORAGE_KEY);
     sessionStorage.removeItem(PROFILE_STORAGE_KEY);
+    localStorage.removeItem(PROFILE_STORAGE_KEY);
   } catch {
     // Ignore storage restrictions/private mode.
   }
@@ -297,7 +301,7 @@ function CommercialBridge() {
   const [notice, setNotice] = useState(null);
   const [attendanceLocations, setAttendanceLocations] = useState([]);
   const [attendanceAnomalies, setAttendanceAnomalies] = useState([]);
-  const [authLoading, setAuthLoading] = useState(!(cachedSession && cachedProfile));
+  const [authLoading, setAuthLoading] = useState(true);
   const [recoveryMode, setRecoveryMode] = useState(false);
   const [mfaReady, setMfaReady] = useState(false);
   const isDemoMode = useMemo(() => import.meta.env.VITE_ENABLE_DEMO === 'true' && new URLSearchParams(window.location.search).get('demo') === '1', []);
@@ -481,7 +485,10 @@ function CommercialBridge() {
     setPanel(null);
   };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
-  if (authLoading) return (
+  // Num refresh de uma sessão já conhecida, não bloquear a interface com
+  // uma tela de sincronização: usamos o último perfil verificado e revalidamos
+  // a sessão em segundo plano.
+  if (authLoading && !profile) return (
     <div className="tc-app-boot" aria-busy="true">
       <div className="tc-app-boot-inner">
         <div className="tc-app-boot-brand"><img src="/teconnect-logo.svg" alt="Te-connect" /><span className="tc-app-boot-dot" /></div>
@@ -494,6 +501,23 @@ function CommercialBridge() {
     setRecoveryMode(false);
     await supabase.auth.signOut();
   }} />;
+  if (authLoading && profile) {
+    if (profile.role === 'EMPLOYEE') {
+      return <EmployeeMobileWorkspace profile={profile} />;
+    }
+    if (ADMIN_HR_ROLES.has(profile.role) && !mfaReady) {
+      return <AdminMfaGate supabase={supabase} profile={profile} onVerified={markMfaReady} />;
+    }
+    return (
+      <ProductionWorkspace
+        profile={profile}
+        billing={billing}
+        onOpenAttendance={openAttendance}
+        onOpenPanel={openPanel}
+        onOpenBilling={() => openPanel('billing')}
+      />
+    );
+  }
   if (!session) {
     const publicPath = window.location.pathname === '/' || window.location.pathname === '/index.html';
     if (publicPath && !new URLSearchParams(window.location.search).has('mode')) {
