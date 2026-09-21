@@ -342,13 +342,6 @@ function CommercialBridge() {
           .maybeSingle();
 
         if (!employeeLookupError && linkedEmployee) {
-          setProfile({
-            ...nextProfile,
-            role: 'EMPLOYEE',
-            employee_id: linkedEmployee.id,
-            employee_code: linkedEmployee.employee_code,
-            full_name: linkedEmployee.full_name || nextProfile.full_name,
-          });
           const employeeProfile = {
             ...nextProfile,
             role: 'EMPLOYEE',
