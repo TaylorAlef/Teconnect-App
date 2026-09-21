@@ -649,6 +649,22 @@ function Overview({ state, liveEmployees, presentToday, lateToday, pendingVacati
       </div>
     </section>
 
+    <section className="tc-executive-brief">
+      <div className="tc-executive-brief-main">
+        <div className="tc-dashboard-section-kicker"><Sparkles size={13}/> BRIEFING EXECUTIVO</div>
+        <h2>O seu RH, resumido em 30 segundos.</h2>
+        <p>{openAlerts.length || pendingVacations.length || pendingOvertime.length
+          ? `Existem ${openAlerts.length + pendingVacations.length + pendingOvertime.length} sinais que merecem atenção. O Te-connect já os organizou por prioridade para a sua próxima ação.`
+          : 'A operação está sem pendências prioritárias neste momento. Continue a acompanhar a equipa em tempo real.'}</p>
+      </div>
+      <div className="tc-executive-brief-metrics">
+        <div><strong>{presentToday.length}/{activeCount}</strong><span>a trabalhar hoje</span></div>
+        <div><strong>{lateToday.length}</strong><span>atrasos hoje</span></div>
+        <div><strong>{openAlerts.length}</strong><span>alertas abertos</span></div>
+        <div><strong>{failedIntegrations.length}</strong><span>integrações com erro</span></div>
+      </div>
+    </section>
+
     <section className="tc-priority-panel">
       <div className="tc-priority-head">
         <div>
