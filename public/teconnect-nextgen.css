@@ -1,0 +1,321 @@
+/* ==========================================================================
+   TE-CONNECT · NEXT-GEN UI LAYER
+   ==========================================================================
+   Camada visual aditiva. Não substitui os CSS existentes.
+   É carregada depois deles e reutiliza as classes existentes.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800;900&display=swap');
+
+:root{
+  --ng-radius-lg: 24px;
+  --ng-radius-md: 16px;
+  --ng-radius-sm: 11px;
+  --ng-ease: cubic-bezier(.19,1,.22,1);
+
+  --ng-violet: #7c6bff;
+  --ng-blue: #2f6bff;
+  --ng-cyan: #22d3ee;
+  --ng-mint: #2fe0a3;
+  --ng-amber: #ffb545;
+  --ng-rose: #ff5d7a;
+
+  --ng-glass-bg: rgba(255,255,255,.72);
+  --ng-glass-border: rgba(17,32,64,.08);
+  --ng-glass-shadow: 0 20px 60px -20px rgba(20,40,90,.22), 0 2px 8px rgba(20,40,90,.06);
+  --ng-glass-shadow-hover: 0 28px 80px -22px rgba(30,60,140,.30), 0 4px 14px rgba(20,40,90,.10);
+
+  --ng-surface: #f6f8fd;
+}
+
+.suite-main{
+  background:
+    radial-gradient(circle at 12% -6%, rgba(124,107,255,.10), transparent 40%),
+    radial-gradient(circle at 92% 0%, rgba(34,211,238,.10), transparent 38%),
+    radial-gradient(circle at 50% 120%, rgba(47,224,163,.06), transparent 45%),
+    var(--ng-surface) !important;
+}
+
+.suite-app, .tc-shell, .demo-shell{
+  font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.suite-page-intro h1, .tc-dashboard-heading h1, .tc-hero h1,
+.suite-hero-card h1, .tc-priority-head h2, .suite-panel-head h2,
+.suite-panel-head h3, .tc-card-head h2{
+  font-family: 'Manrope', 'Inter', sans-serif;
+  letter-spacing: -.03em;
+}
+.suite-page-intro h1{
+  background: linear-gradient(100deg,#0d1b3a 15%,#2b4fc7 55%,#5b3ff0 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+}
+
+.suite-sidebar{
+  background:
+    radial-gradient(circle at 20% -10%, rgba(124,107,255,.35), transparent 45%),
+    radial-gradient(circle at 100% 30%, rgba(34,211,238,.18), transparent 40%),
+    linear-gradient(180deg,#060c1e 0%,#070f24 55%,#050a19 100%) !important;
+  border-right: 1px solid rgba(255,255,255,.06) !important;
+}
+.suite-org{
+  background: rgba(255,255,255,.045) !important;
+  border: 1px solid rgba(255,255,255,.09) !important;
+  backdrop-filter: blur(20px);
+}
+.suite-org-icon{
+  background: linear-gradient(135deg, var(--ng-violet), var(--ng-blue)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 22px -6px rgba(124,107,255,.55);
+}
+.suite-nav button{
+  border-radius: 12px !important;
+  transition: transform .22s var(--ng-ease), background .22s var(--ng-ease), color .22s var(--ng-ease);
+}
+.suite-nav button:hover{ transform: translateX(3px); }
+.suite-nav button.active{
+  background: linear-gradient(90deg, rgba(124,107,255,.22), rgba(34,211,238,.10)) !important;
+  box-shadow: inset 0 0 0 1px rgba(140,150,255,.28), 0 6px 18px -6px rgba(124,107,255,.35) !important;
+  position: relative;
+}
+.suite-nav button.active::before{
+  content:'';
+  position:absolute; left:-1px; top:6px; bottom:6px; width:3px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--ng-violet), var(--ng-cyan));
+  box-shadow: 0 0 12px 1px rgba(124,107,255,.7);
+}
+.suite-nav button em{
+  background: linear-gradient(135deg, var(--ng-rose), #ff8a5c) !important;
+  box-shadow: 0 4px 10px -2px rgba(255,93,122,.55);
+}
+
+.suite-topbar{
+  background: rgba(255,255,255,.62) !important;
+  backdrop-filter: blur(22px) saturate(160%);
+  border-bottom: 1px solid var(--ng-glass-border) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 8px 30px -20px rgba(20,40,90,.25);
+}
+.suite-top-search{
+  border-radius: 999px !important;
+  border: 1px solid var(--ng-glass-border) !important;
+  background: rgba(255,255,255,.85) !important;
+  transition: box-shadow .2s var(--ng-ease), transform .2s var(--ng-ease);
+}
+.suite-top-search:hover{ box-shadow: 0 6px 18px -8px rgba(47,107,255,.35); transform: translateY(-1px); }
+.suite-live{
+  background: linear-gradient(90deg, rgba(47,224,163,.14), rgba(47,224,163,.04)) !important;
+  border: 1px solid rgba(47,224,163,.28) !important;
+  color: #0d8a5f !important;
+}
+.suite-live span{ background: var(--ng-mint) !important; box-shadow: 0 0 0 5px rgba(47,224,163,.16) !important; }
+
+.suite-card, .tc-card, .tc-kpi-card, .tc-chart-card, .tc-alert-card,
+.tc-simple-card, .tc-bottom-card, .tc-intelligence-card, .tc-help-card,
+.tc-priority-panel, .tc-executive-summary, .tc-operational-strip{
+  background: var(--ng-glass-bg) !important;
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid var(--ng-glass-border) !important;
+  border-radius: var(--ng-radius-lg) !important;
+  box-shadow: var(--ng-glass-shadow) !important;
+  transition: box-shadow .28s var(--ng-ease), transform .28s var(--ng-ease), border-color .28s var(--ng-ease);
+}
+.suite-card:hover, .tc-kpi-card:hover, .tc-bottom-card:hover, .tc-priority-card:hover{
+  box-shadow: var(--ng-glass-shadow-hover) !important;
+}
+.tc-kpi-card{
+  border-radius: var(--ng-radius-md) !important;
+}
+.tc-kpi-card:hover{ transform: translateY(-3px); }
+.tc-kpi-icon{
+  background: linear-gradient(135deg, rgba(124,107,255,.16), rgba(34,211,238,.10)) !important;
+  color: #4a3fe0 !important;
+  border-radius: 14px !important;
+}
+.tc-kpi-card.green .tc-kpi-icon{ background: linear-gradient(135deg, rgba(47,224,163,.20), rgba(47,224,163,.06)) !important; color:#0d8a5f !important; }
+.tc-kpi-card.red .tc-kpi-icon{ background: linear-gradient(135deg, rgba(255,93,122,.18), rgba(255,93,122,.05)) !important; color:#c23652 !important; }
+
+.tc-executive-brief, .tc-pulse-panel{
+  border-radius: var(--ng-radius-lg) !important;
+  box-shadow: 0 30px 90px -30px rgba(20,30,90,.55), inset 0 1px 0 rgba(255,255,255,.06) !important;
+  position: relative;
+  overflow: hidden;
+}
+.tc-executive-brief::before, .tc-pulse-panel::before{
+  content:'';
+  position:absolute; inset:-40% -20% auto -20%; height: 220%;
+  background: conic-gradient(from 180deg at 50% 50%, rgba(124,107,255,.18), rgba(34,211,238,.14), rgba(47,224,163,.10), rgba(124,107,255,.18));
+  animation: ng-spin 22s linear infinite;
+  opacity: .55;
+  pointer-events: none;
+}
+.tc-executive-brief > *, .tc-pulse-panel > *{ position: relative; z-index: 1; }
+@keyframes ng-spin{ to{ transform: rotate(360deg); } }
+
+.suite-btn, .tc-btn, .demo-btn{
+  border-radius: 12px !important;
+  transition: transform .18s var(--ng-ease), box-shadow .18s var(--ng-ease), background .18s var(--ng-ease) !important;
+}
+.suite-btn:hover, .tc-btn:hover, .demo-btn:hover{ transform: translateY(-1.5px); }
+.suite-btn.primary, .tc-btn.primary, .demo-btn-primary{
+  background: linear-gradient(135deg, var(--ng-violet), var(--ng-blue)) !important;
+  border: none !important;
+  color: #fff !important;
+  box-shadow: 0 10px 26px -8px rgba(90,90,255,.55) !important;
+}
+.suite-btn.primary:hover, .tc-btn.primary:hover, .demo-btn-primary:hover{
+  box-shadow: 0 14px 34px -8px rgba(90,90,255,.68) !important;
+}
+.suite-btn.danger, .tc-btn.danger{
+  background: linear-gradient(135deg, rgba(255,93,122,.12), rgba(255,93,122,.04)) !important;
+  border: 1px solid rgba(255,93,122,.28) !important;
+}
+.suite-btn:not(.primary):not(.danger), .tc-btn:not(.primary):not(.danger):not(.ghost){
+  background: rgba(255,255,255,.75) !important;
+  border: 1px solid var(--ng-glass-border) !important;
+  backdrop-filter: blur(10px);
+}
+
+.suite-badge, .tc-badge, .demo-pill{
+  border-radius: 999px !important;
+  font-weight: 800 !important;
+  letter-spacing: .01em;
+}
+.suite-badge.positive, .tc-badge.low, .demo-pill-success{
+  background: linear-gradient(90deg, rgba(47,224,163,.16), rgba(47,224,163,.05)) !important;
+  color: #0d8a5f !important;
+  box-shadow: inset 0 0 0 1px rgba(47,224,163,.22);
+}
+.suite-badge.warning, .tc-badge.medium, .demo-pill-warning{
+  background: linear-gradient(90deg, rgba(255,181,69,.20), rgba(255,181,69,.06)) !important;
+  color: #9a6300 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,181,69,.28);
+}
+.suite-badge.danger, .tc-badge.high, .demo-pill-danger{
+  background: linear-gradient(90deg, rgba(255,93,122,.18), rgba(255,93,122,.05)) !important;
+  color: #c23652 !important;
+  box-shadow: inset 0 0 0 1px rgba(255,93,122,.26);
+}
+
+.tc-priority-card{
+  border-radius: 16px !important;
+  border: 1px solid var(--ng-glass-border) !important;
+  background: rgba(255,255,255,.85) !important;
+}
+.tc-priority-card:hover{
+  border-color: rgba(124,107,255,.35) !important;
+  transform: translateY(-2px);
+}
+.tc-priority-icon{
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, rgba(124,107,255,.16), rgba(34,211,238,.10)) !important;
+  color: #4a3fe0 !important;
+}
+.tc-priority-card.warning .tc-priority-icon{ background: linear-gradient(135deg, rgba(255,181,69,.22), rgba(255,181,69,.06)) !important; color:#9a6300 !important; }
+.tc-priority-card.danger .tc-priority-icon{ background: linear-gradient(135deg, rgba(255,93,122,.20), rgba(255,93,122,.06)) !important; color:#c23652 !important; }
+
+.tc-bar-fill{
+  background: linear-gradient(180deg, var(--ng-cyan), var(--ng-blue), var(--ng-violet)) !important;
+  border-radius: 10px 10px 4px 4px !important;
+  box-shadow: 0 6px 16px -6px rgba(47,107,255,.45);
+}
+.suite-progress span, .demo-progress span{
+  background: linear-gradient(90deg, var(--ng-violet), var(--ng-cyan)) !important;
+}
+
+.suite-table thead th, .tc-table th, .demo-table th{
+  color: #5b6b8c !important;
+  font-weight: 800 !important;
+  letter-spacing: .06em !important;
+}
+.suite-table tbody tr, .tc-table tbody tr{
+  transition: background .18s ease;
+}
+.suite-table tbody tr:hover, .tc-table tbody tr:hover{
+  background: rgba(124,107,255,.045) !important;
+}
+.suite-avatar, .demo-avatar, .tc-avatar{
+  background: linear-gradient(135deg, rgba(124,107,255,.16), rgba(34,211,238,.14)) !important;
+  color: #3f37c9 !important;
+  border-radius: 12px !important;
+}
+
+.suite-kanban-col, .tc-column, .demo-kanban-col{
+  background: rgba(255,255,255,.55) !important;
+  border: 1px solid var(--ng-glass-border) !important;
+  border-radius: var(--ng-radius-md) !important;
+  backdrop-filter: blur(14px);
+}
+.suite-candidate-card, .tc-task, .demo-candidate{
+  border-radius: 14px !important;
+  transition: transform .2s var(--ng-ease), box-shadow .2s var(--ng-ease);
+}
+.suite-candidate-card:hover, .tc-task:hover, .demo-candidate:hover{
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px -14px rgba(30,50,120,.25);
+}
+
+.suite-overlay, .demo-modal-backdrop{
+  background: rgba(8,14,32,.55) !important;
+  backdrop-filter: blur(14px) saturate(120%);
+}
+.suite-modal, .demo-modal{
+  border-radius: 22px !important;
+  border: 1px solid rgba(255,255,255,.5) !important;
+  box-shadow: 0 40px 100px -30px rgba(10,20,60,.45) !important;
+  animation: ng-modal-in .28s var(--ng-ease);
+}
+@keyframes ng-modal-in{
+  from{ opacity:0; transform: translateY(10px) scale(.985); }
+  to{ opacity:1; transform: translateY(0) scale(1); }
+}
+.suite-form input, .suite-form select, .suite-form textarea,
+.tc-form input, .tc-form select, .tc-form textarea,
+.demo-field input, .demo-field select{
+  border-radius: 11px !important;
+  transition: border-color .18s ease, box-shadow .18s ease;
+}
+.suite-form input:focus, .tc-form input:focus, .demo-field input:focus{
+  border-color: rgba(124,107,255,.55) !important;
+  box-shadow: 0 0 0 4px rgba(124,107,255,.14) !important;
+  outline: none !important;
+}
+
+.tc-dock-shell{
+  background: rgba(8,14,30,.72) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+  box-shadow: 0 22px 60px -16px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06) !important;
+}
+.tc-dock-item.is-primary{
+  background: linear-gradient(135deg, var(--ng-violet), var(--ng-blue)) !important;
+  box-shadow: 0 10px 24px -6px rgba(90,90,255,.55) !important;
+}
+
+.suite-content > *{
+  animation: ng-rise .5s var(--ng-ease) both;
+}
+.suite-content > *:nth-child(1){ animation-delay: .02s; }
+.suite-content > *:nth-child(2){ animation-delay: .06s; }
+.suite-content > *:nth-child(3){ animation-delay: .10s; }
+.suite-content > *:nth-child(4){ animation-delay: .14s; }
+.suite-content > *:nth-child(5){ animation-delay: .18s; }
+@keyframes ng-rise{
+  from{ opacity: 0; transform: translateY(10px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .suite-content > *, .tc-executive-brief::before, .tc-pulse-panel::before,
+  .suite-nav button, .tc-kpi-card, .suite-btn, .tc-btn, .demo-btn, .suite-modal, .demo-modal{
+    animation: none !important;
+    transition: none !important;
+  }
+}
+:focus-visible{
+  outline: 2px solid rgba(124,107,255,.65) !important;
+  outline-offset: 2px !important;
+}
+
+/* Exclusões deliberadas: não tocar na fotografia/hero do fundador. */
