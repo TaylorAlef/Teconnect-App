@@ -24,20 +24,14 @@ jobs:
           set -euo pipefail
           rm -rf /tmp/teconnect-src /tmp/teconnect-source.zip
           mkdir -p /tmp/teconnect-src
-
           git archive --format=tar "$GITHUB_SHA" | tar -x -C /tmp/teconnect-src
-
-          # Never package local secrets or generated dependency/build folders.
           rm -f /tmp/teconnect-src/.env.production
           rm -f /tmp/teconnect-src/.env.local
           rm -f /tmp/teconnect-src/.DS_Store
           rm -rf /tmp/teconnect-src/node_modules
           rm -rf /tmp/teconnect-src/dist
           rm -rf /tmp/teconnect-src/.wrangler
-
-          # Add a small export manifest with the exact source commit.
           printf 'TE-Connect source package\nCommit: %s\nGenerated: %s\n' "$GITHUB_SHA" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > /tmp/teconnect-src/SOURCE_PACKAGE.txt
-
           cd /tmp/teconnect-src
           zip -qr /tmp/teconnect-source.zip .
 
