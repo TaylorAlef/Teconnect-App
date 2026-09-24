@@ -16,9 +16,9 @@ function Metric({ label, value, helper }) {
   return <div style={{ border: '1px solid rgba(255,255,255,.08)', borderRadius: 12, padding: 13, background: 'rgba(255,255,255,.025)' }}><span style={{ display: 'block', fontSize: 9, color: 'rgba(255,255,255,.5)' }}>{label}</span><strong style={{ display: 'block', marginTop: 5, fontSize: 21 }}>{value}</strong><small style={{ display: 'block', marginTop: 4, color: 'rgba(255,255,255,.42)', fontSize: 8 }}>{helper}</small></div>;
 }
 
-export default function Employee360Panel({ profile, onClose }) {
+export default function Employee360Panel({ profile, onClose, focusEmployeeId = null }) {
   const [employees, setEmployees] = useState([]);
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(focusEmployeeId);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -31,8 +31,8 @@ export default function Employee360Panel({ profile, onClose }) {
     const { data, error: queryError } = await supabase.from('employees').select('id,full_name,employee_code,email,status').eq('company_id', profile.company_id).order('full_name').limit(2000);
     if (queryError) throw queryError;
     setEmployees(data || []);
-    if (!selectedId && data?.[0]?.id) setSelectedId(data[0].id);
-  }, [profile.company_id, selectedId]);
+    if (!selectedId && !focusEmployeeId && data?.[0]?.id) setSelectedId(data[0].id);
+  }, [profile.company_id, selectedId, focusEmployeeId]);
 
   const loadShiftContext = useCallback(async () => {
     if (!profile?.company_id || !selectedId) return;

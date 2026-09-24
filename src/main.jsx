@@ -44,6 +44,7 @@ import LifecycleCenter from './people/LifecycleCenter.jsx';
 import EmployeeMobileWorkspace from './employee/EmployeeMobileWorkspace.jsx';
 import { ToastProvider } from './ui/Toast.jsx';
 import { SkeletonKpiRow, SkeletonTable } from './ui/Skeleton.jsx';
+import CommandPalette from './ui/CommandPalette.jsx';
 import SetupWizard from './commercial/SetupWizard.jsx';
 import ExceptionCenter from './ops/ExceptionCenter.jsx';
 import PeopleAnalyticsCenter from './analytics/PeopleAnalyticsCenter.jsx';
@@ -75,6 +76,24 @@ try {
 
 const ADMIN_HR_ROLES = new Set(['SUPER_ADMIN', 'COMPANY_ADMIN', 'RH']);
 const MANAGER_ROLES = new Set(['GESTOR', 'SUPERVISOR']);
+
+// Espelha as condições de render dos painéis abaixo; usado para não oferecer
+// no dashboard/Ctrl+K atalhos que o papel não consegue abrir. RLS continua a ser a barreira real.
+const PANEL_ACCESS = {
+  overview: () => true,
+  attendance: () => true,
+  security: () => true,
+  privacy: () => true,
+  requests: (role) => role !== 'SUPER_ADMIN',
+  'self-service': (role) => role !== 'SUPER_ADMIN',
+  approvals: (role) => ADMIN_HR_ROLES.has(role) || MANAGER_ROLES.has(role),
+  billing: (role) => role === 'COMPANY_ADMIN' || role === 'SUPER_ADMIN',
+  'super-admin': (role) => role === 'SUPER_ADMIN',
+};
+function canOpenPanel(role, key) {
+  const rule = PANEL_ACCESS[key];
+  return rule ? rule(role) : ADMIN_HR_ROLES.has(role);
+}
 
 const SESSION_STORAGE_KEY = 'teconnect:auth-session';
 const PROFILE_STORAGE_KEY = 'teconnect:auth-profile';
@@ -123,6 +142,18 @@ function clearAuthCache() {
     // Ignore storage restrictions/private mode.
   }
 }
+function BootScreen() {
+  return (
+    <div className="tc-app-boot" aria-busy="true">
+      <div className="tc-app-boot-inner">
+        <div className="tc-app-boot-brand"><img src="/teconnect-logo.svg" alt="Te-connect" /><span className="tc-app-boot-dot" /></div>
+        <SkeletonKpiRow count={4} />
+        <div className="tc-app-boot-panel"><SkeletonTable rows={6} cols={5} /></div>
+      </div>
+    </div>
+  );
+}
+
 const roleLabels = {
   SUPER_ADMIN: 'Super Admin',
   COMPANY_ADMIN: 'Admin da empresa',
@@ -324,6 +355,7 @@ function CommercialBridge() {
   const [profileLoadError, setProfileLoadError] = useState(null);
   const [billing, setBilling] = useState(null);
   const [panel, setPanel] = useState(null);
+  const [panelFocusId, setPanelFocusId] = useState(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [attendancePanel, setAttendancePanel] = useState(false);
@@ -515,25 +547,19 @@ function CommercialBridge() {
     setMoreOpen(false);
     setAttendancePanel(false);
     setPanel(null);
+    setPanelFocusId(null);
   };
-  const openPanel = (type) => {
+  const openPanel = (type, focusId = null) => {
     setMoreOpen(false);
     setAttendancePanel(false);
     setPanel(type);
+    setPanelFocusId(focusId);
   };
   if (supabaseInitError) return <StartupError error={supabaseInitError} />;
   // Num refresh de uma sessão já conhecida, não bloquear a interface com
   // uma tela de sincronização: usamos o último perfil verificado e revalidamos
   // a sessão em segundo plano.
-  if (authLoading && !profile) return (
-    <div className="tc-app-boot" aria-busy="true">
-      <div className="tc-app-boot-inner">
-        <div className="tc-app-boot-brand"><img src="/teconnect-logo.svg" alt="Te-connect" /><span className="tc-app-boot-dot" /></div>
-        <SkeletonKpiRow count={4} />
-        <div className="tc-app-boot-panel"><SkeletonTable rows={6} cols={5} /></div>
-      </div>
-    </div>
-  );
+  if (authLoading && !profile) return <BootScreen />;
   if (recoveryMode && session) return <PasswordRecoveryPage onComplete={async () => {
     setRecoveryMode(false);
     await supabase.auth.signOut();
@@ -552,6 +578,7 @@ function CommercialBridge() {
         onOpenAttendance={openAttendance}
         onOpenPanel={openPanel}
         onOpenBilling={() => openPanel('billing')}
+        canOpen={(key) => canOpenPanel(profile.role, key)}
       />
     );
   }
@@ -575,7 +602,9 @@ function CommercialBridge() {
       </div>
     );
   }
-  if (!profile) return null;
+  // Sessão válida sem perfil: conta nova (ou sem empresa) vai para o onboarding;
+  // enquanto get_my_profile ainda responde, mostrar o boot em vez de ecrã vazio.
+  if (!profile) return needsOnboarding ? <OnboardingPage onComplete={() => window.location.reload()} /> : <BootScreen />;
   // Colaboradores nunca passam pelo shell de RH nem pelo MFA administrativo.
   // O papel é resolvido a partir do profile + employees.user_id acima.
   if (profile.role === 'EMPLOYEE') {
@@ -608,13 +637,21 @@ function CommercialBridge() {
       {isDemoMode ? (
         <TeconnectSuite profile={profile} />
       ) : (
-        <ProductionWorkspace
-          profile={profile}
-          billing={billing}
-          onOpenAttendance={openAttendance}
-          onOpenPanel={openPanel}
-          onOpenBilling={() => openPanel('billing')}
-        />
+        <>
+          <ProductionWorkspace
+            profile={profile}
+            billing={billing}
+            onOpenAttendance={openAttendance}
+            onOpenPanel={openPanel}
+            onOpenBilling={() => openPanel('billing')}
+            canOpen={(key) => canOpenPanel(profile.role, key)}
+          />
+          <CommandPalette
+            onOpenAttendance={openAttendance}
+            onNavigate={(id) => (id === 'overview' ? closeAll() : openPanel(id))}
+            canOpen={(key) => canOpenPanel(profile.role, key)}
+          />
+        </>
       )}
 
       <nav className={`tc-product-chrome${moreOpen ? ' is-open' : ''}`} aria-label="Navegação do Te-connect">
@@ -716,7 +753,7 @@ function CommercialBridge() {
             {panel === 'security' && <SecurityCenter profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'privacy' && <PrivacyCenter profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'approvals' && canApprove && <ApprovalsCenter profile={profile} onToast={notify} />}
-            {panel === 'people360' && canManageHr && <Employee360Panel profile={profile} onClose={() => setPanel(null)} />}
+            {panel === 'people360' && canManageHr && <Employee360Panel profile={profile} onClose={() => setPanel(null)} focusEmployeeId={panelFocusId} />}
             {panel === 'performance' && canManageHr && <PerformanceCenter profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'setup' && canManageHr && <SetupWizard profile={profile} onClose={() => setPanel(null)} />}
             {panel === 'rules' && canManageHr && <RulesCenter profile={profile} onClose={() => setPanel(null)} />}

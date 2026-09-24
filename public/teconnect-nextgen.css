@@ -52,6 +52,11 @@
   background-clip: text;
   color: transparent !important;
 }
+/* O gradiente acima começa em azul-marinho: sobre o hero escuro, o início do título ficava invisível. */
+.suite-hero-card .suite-page-intro h1{
+  background: none;
+  color: #fff !important;
+}
 
 .suite-sidebar{
   background:
