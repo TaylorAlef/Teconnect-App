@@ -19,7 +19,8 @@
     "check:web-launch": "node scripts/check-web-launch.mjs",
     "check:saas-contract": "node scripts/check-saas-contract.mjs",
     "test:e2e": "playwright test",
-    "test:e2e:critical": "playwright test tests/e2e/critical-onboarding-to-attendance.spec.ts"
+    "test:e2e:critical": "playwright test tests/e2e/critical-onboarding-to-attendance.spec.ts",
+    "check:production-workspace": "node scripts/check-production-workspace-export.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^8.5.2",
