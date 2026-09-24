@@ -1,4 +1,46 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
-const cors={'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'authorization, x-client-info, apikey, content-type'};
-const json=(b:unknown,s=200)=>new Response(JSON.stringify(b),{status:s,headers:{...cors,'Content-Type':'application/json'}});
-Deno.serve(async(req)=>{if(req.method==='OPTIONS')return new Response('ok',{headers:cors});try{const auth=req.headers.get('Authorization');if(!auth)return json({error:'AUTH_REQUIRED'},401);const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:auth}}});const {data:{user}}=await db.auth.getUser();if(!user)return json({error:'AUTH_REQUIRED'},401);const {data:p}=await db.from('profiles').select('company_id,role,active').eq('id',user.id).single();if(!p?.active||!['COMPANY_ADMIN','SUPER_ADMIN'].includes(p.role))return json({error:'FORBIDDEN'},403);const {plan_code}=await req.json();const code=String(plan_code||'').toUpperCase();if(!['STARTER','BUSINESS','ENTERPRISE'].includes(code))return json({error:'INVALID_PLAN'},400);const secret=Deno.env.get('STRIPE_SECRET_KEY'),price=Deno.env.get(`STRIPE_PRICE_${code}`);if(!secret||!price)return json({error:'BILLING_NOT_CONFIGURED'},503);const {data:s}=await db.from('subscriptions').select('stripe_subscription_id,status').eq('company_id',p.company_id).maybeSingle();if(s?.stripe_subscription_id&&s.status!=='canceled'){const r=await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`,{headers:{Authorization:`Bearer ${secret}`}}),current=await r.json();if(!r.ok)return json({error:'STRIPE_LOOKUP_FAILED',details:current?.error?.message},502);const item=current.items?.data?.[0]?.id;if(!item)return json({error:'SUBSCRIPTION_ITEM_NOT_FOUND'},502);const f=new URLSearchParams();f.set('items[0][id]',item);f.set('items[0][price]',price);f.set('proration_behavior','create_prorations');f.set('metadata[company_id]',p.company_id);f.set('metadata[plan_code]',code);const u=await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`,{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/x-www-form-urlencoded'},body:f}),data=await u.json();if(!u.ok)return json({error:'STRIPE_CHANGE_PLAN_FAILED',details:data?.error?.message},502);return json({mode:'updated',subscription_id:data.id});}const origin=req.headers.get('origin')||Deno.env.get('APP_URL')||'https://app.te-connect.com';const f=new URLSearchParams();f.set('mode','subscription');f.set('line_items[0][price]',price);f.set('line_items[0][quantity]','1');f.set('success_url',`${origin}/?billing=success`);f.set('cancel_url',`${origin}/?billing=cancelled`);f.set('customer_email',user.email||'');f.set('client_reference_id',p.company_id);f.set('metadata[company_id]',p.company_id);f.set('metadata[plan_code]',code);f.set('subscription_data[metadata][company_id]',p.company_id);f.set('subscription_data[metadata][plan_code]',code);const r=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/x-www-form-urlencoded'},body:f}),data=await r.json();if(!r.ok)return json({error:'STRIPE_CHECKOUT_ERROR',details:data?.error?.message},502);return json({mode:'checkout',url:data.url,session_id:data.id});}catch(e){console.error(e);return json({error:'INTERNAL_ERROR'},500);}});
+const ALLOWED_ORIGINS = new Set([
+  'https://app.te-connect.com',
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+]);
+function cors(origin: string | null) {
+  const allowOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://app.te-connect.com';
+  return {
+    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  };
+}
+const json=(b:unknown,s=200,origin:string|null=null)=>new Response(JSON.stringify(b),{status:s,headers:{...cors(origin),'Content-Type':'application/json'}});
+Deno.serve(async(req)=>{
+  const origin=req.headers.get('Origin');
+  if(req.method==='OPTIONS')return new Response('ok',{status:204,headers:cors(origin)});
+  try{
+    const auth=req.headers.get('Authorization');if(!auth)return json({error:'AUTH_REQUIRED'},401,origin);
+    const db=createClient(Deno.env.get('SUPABASE_URL')!,Deno.env.get('SUPABASE_ANON_KEY')!,{global:{headers:{Authorization:auth}}});
+    const {data:{user}}=await db.auth.getUser();if(!user)return json({error:'AUTH_REQUIRED'},401,origin);
+    const {data:p}=await db.from('profiles').select('company_id,role,active').eq('id',user.id).single();
+    if(!p?.active||!['COMPANY_ADMIN','SUPER_ADMIN'].includes(p.role))return json({error:'FORBIDDEN'},403,origin);
+    const {plan_code}=await req.json();const code=String(plan_code||'').toUpperCase();
+    if(!['STARTER','BUSINESS','ENTERPRISE'].includes(code))return json({error:'INVALID_PLAN'},400,origin);
+    const secret=Deno.env.get('STRIPE_SECRET_KEY'),price=Deno.env.get(`STRIPE_PRICE_${code}`);
+    if(!secret||!price)return json({error:'BILLING_NOT_CONFIGURED'},503,origin);
+    const {data:s}=await db.from('subscriptions').select('stripe_subscription_id,status').eq('company_id',p.company_id).maybeSingle();
+    if(s?.stripe_subscription_id&&s.status!=='canceled'){
+      const r=await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`,{headers:{Authorization:`Bearer ${secret}`}}),current=await r.json();
+      if(!r.ok)return json({error:'STRIPE_LOOKUP_FAILED',details:current?.error?.message},502,origin);
+      const item=current.items?.data?.[0]?.id;if(!item)return json({error:'SUBSCRIPTION_ITEM_NOT_FOUND'},502,origin);
+      const f=new URLSearchParams();f.set('items[0][id]',item);f.set('items[0][price]',price);f.set('proration_behavior','create_prorations');f.set('metadata[company_id]',p.company_id);f.set('metadata[plan_code]',code);
+      const u=await fetch(`https://api.stripe.com/v1/subscriptions/${s.stripe_subscription_id}`,{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/x-www-form-urlencoded'},body:f}),data=await u.json();
+      if(!u.ok)return json({error:'STRIPE_CHANGE_PLAN_FAILED',details:data?.error?.message},502,origin);
+      return json({mode:'updated',subscription_id:data.id},200,origin);
+    }
+    const appOrigin=req.headers.get('origin')||Deno.env.get('APP_URL')||'https://app.te-connect.com';
+    const f=new URLSearchParams();f.set('mode','subscription');f.set('line_items[0][price]',price);f.set('line_items[0][quantity]','1');f.set('success_url',`${appOrigin}/?billing=success`);f.set('cancel_url',`${appOrigin}/?billing=cancelled`);f.set('customer_email',user.email||'');f.set('client_reference_id',p.company_id);f.set('metadata[company_id]',p.company_id);f.set('metadata[plan_code]',code);f.set('subscription_data[metadata][company_id]',p.company_id);f.set('subscription_data[metadata][plan_code]',code);
+    const r=await fetch('https://api.stripe.com/v1/checkout/sessions',{method:'POST',headers:{Authorization:`Bearer ${secret}`,'Content-Type':'application/x-www-form-urlencoded'},body:f}),data=await r.json();
+    if(!r.ok)return json({error:'STRIPE_CHECKOUT_ERROR',details:data?.error?.message},502,origin);
+    return json({mode:'checkout',url:data.url,session_id:data.id},200,origin);
+  }catch(e){console.error(e);return json({error:'INTERNAL_ERROR'},500,origin);}
+});
