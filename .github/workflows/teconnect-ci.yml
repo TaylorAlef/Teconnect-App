@@ -21,6 +21,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Production build
         run: npm run build
+      - name: Production workspace export guard
+        run: npm run check:production-workspace
       - name: Branding guard
         run: npm run check:branding
       - name: Globalization guard
@@ -29,6 +31,5 @@ jobs:
         run: npm run check:web-launch
       - name: SaaS contract guard
         run: npm run check:saas-contract
-
       - name: Mobile readiness guard
         run: npm run mobile:check
