@@ -110,8 +110,8 @@ export default function ProductionWorkspace({ profile, billing, onOpenAttendance
       supabase.from('overtime_records').select('id,employee_id,status,minutes').eq('company_id', companyId).order('created_at', { ascending: false }).limit(50),
       supabase.from('absences').select('id,employee_id,status,start_date,end_date').eq('company_id', companyId).order('created_at', { ascending: false }).limit(50),
       supabase.from('employee_documents').select('id,employee_id,title,expires_at').eq('company_id', companyId).not('expires_at', 'is', null).lte('expires_at', horizon30).order('expires_at', { ascending: true }).limit(20),
-      supabase.from('employee_invitations').select('id,employee_id,email,status,invited_at').eq('company_id', companyId).eq('status', 'SENT').order('invited_at', { ascending: true }).limit(10),
-      supabase.from('integration_jobs').select('id,provider,status,last_error,created_at').eq('company_id', companyId).in('status', ['FAILED', 'ERROR']).order('created_at', { ascending: false }).limit(10),
+      supabase.from('employee_invitations').select('employee_id,email,status,last_error,created_at').eq('company_id', companyId).order('created_at', { ascending: false }).limit(200),
+      supabase.from('integration_jobs').select('id,provider,status,last_error,created_at').eq('company_id', companyId).eq('status', 'FAILED').order('created_at', { ascending: false }).limit(10),
     ]);
 
     const employees = employeesResult.data || [];
@@ -146,7 +146,13 @@ export default function ProductionWorkspace({ profile, billing, onOpenAttendance
     const overtimeMinutesThisMonth = (overtimeResult.data || []).reduce((sum, o) => sum + (o.minutes || 0), 0);
 
     const documents = documentsResult.data || [];
-    const invitations = invitationsResult.data || [];
+    // Cada tentativa de convite gera uma linha nova e nada marca o convite como aceite,
+    // por isso só a última tentativa por colaborador conta, e só falhas são sinal fiável.
+    const latestInvitationByEmployee = new Map();
+    (invitationsResult.data || []).forEach((row) => {
+      if (!latestInvitationByEmployee.has(row.employee_id)) latestInvitationByEmployee.set(row.employee_id, row);
+    });
+    const failedInvitations = [...latestInvitationByEmployee.values()].filter((row) => row.status === 'ERROR');
     const failedIntegrations = integrationsResult.data || [];
 
     setKpis({
@@ -222,11 +228,11 @@ export default function ProductionWorkspace({ profile, billing, onOpenAttendance
         action: 'Rever', onClick: () => onOpenPanel?.('approvals'),
       });
     }
-    if (canOpen('employee-access') && invitations.length) {
+    if (canOpen('employee-access') && failedInvitations.length) {
       nextActions.push({
-        tone: 'info', icon: UserPlus, category: 'Acesso',
-        title: `${invitations.length} colaborador(es) ainda não ativaram a conta`,
-        sub: invitations[0]?.email ? `Convite pendente: ${invitations[0].email}` : 'Convites por aceitar',
+        tone: 'warning', icon: UserPlus, category: 'Acesso',
+        title: `${failedInvitations.length} convite(s) de acesso não foram enviados`,
+        sub: failedInvitations[0]?.email ? `Falhou para ${failedInvitations[0].email}` : 'Reenviar a partir da gestão de acessos',
         action: 'Gerir acessos', onClick: () => onOpenPanel?.('employee-access'),
       });
     }
